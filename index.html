@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" class="light">
+<html lang="es" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,7 +10,7 @@
     <meta http-equiv="Expires" content="0">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#6366f1">
+    <meta name="theme-color" content="#0f172a"> <!-- Color oscuro para la barra de estado -->
     <title>Finzen - Gestor Financiero</title>
     
     <!-- Manifest para PWA -->
@@ -37,62 +37,63 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: 90px; transition: background-color 0.3s, color 0.3s; }
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); }
-        .dark .glass { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.05); }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: 90px; }
+        /* Estilo Glassmorphism fijado en oscuro */
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .fab { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 50; box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.6); }
         .nav-item { transition: all 0.2s; }
-        .nav-item.active { color: #6366f1; transform: translateY(-2px); }
-        .dark .nav-item.active { color: #818cf8; }
+        .nav-item.active { color: #818cf8; transform: translateY(-2px); }
         input, select { font-size: 16px !important; }
+        
+        /* Ajustes para SweetAlert2 en modo oscuro nativo */
+        .swal2-popup { background: #1e293b !important; color: #f8fafc !important; }
+        .swal2-title, .swal2-html-container { color: #f8fafc !important; }
+        .swal2-input, .swal2-select { background: #0f172a !important; color: white !important; border-color: #334155 !important; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 dark:bg-slate-900 dark:text-gray-100 min-h-screen">
+<body class="bg-slate-900 text-gray-100 min-h-screen">
 
     <!-- HEADER -->
     <header class="px-5 pt-6 pb-4 flex justify-between items-center">
         <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Hola,</p>
-            <h1 class="text-2xl font-extrabold tracking-tight">Tus Finanzas</h1>
+            <p class="text-sm text-gray-400">Hola,</p>
+            <h1 class="text-2xl font-extrabold tracking-tight text-white">Tus Finanzas</h1>
         </div>
-        <button onclick="toggleTheme()" class="w-10 h-10 rounded-full glass flex items-center justify-center text-gray-600 dark:text-gray-300">
-            <i class="fas fa-moon dark:hidden"></i>
-            <i class="fas fa-sun hidden dark:block"></i>
-        </button>
+        <!-- El botón de tema fue eliminado -->
     </header>
 
     <main class="px-5 max-w-lg mx-auto">
         
         <!-- SECCIÓN: INICIO (DASHBOARD) -->
         <section id="view-inicio" class="block animate-fade-in">
-            <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-500/20 mb-6 relative overflow-hidden">
+            <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-6 text-white shadow-xl shadow-indigo-500/20 mb-6 relative overflow-hidden">
                 <div class="absolute -right-10 -top-10 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
                 <p class="text-indigo-100 text-sm font-medium">Límite de gasto para hoy</p>
                 <h2 class="text-4xl font-extrabold mt-1 mb-2" id="lblLimiteDiario">$0</h2>
-                <div class="w-full bg-black/20 rounded-full h-2 mb-2">
+                <div class="w-full bg-black/30 rounded-full h-2 mb-2">
                     <div id="barraProgreso" class="bg-white h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
                 <p id="lblEstadoLimite" class="text-xs text-indigo-100 font-medium">Calculando...</p>
             </div>
 
             <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="glass rounded-2xl p-4 shadow-sm flex flex-col justify-between">
-                    <div class="flex items-center gap-2 mb-2 text-emerald-500">
+                <div class="glass rounded-2xl p-4 flex flex-col justify-between">
+                    <div class="flex items-center gap-2 mb-2 text-emerald-400">
                         <i class="fas fa-arrow-down"></i> <span class="text-xs font-bold uppercase">Ingresos</span>
                     </div>
-                    <h3 class="text-xl font-bold" id="resumenIngresos">$0</h3>
+                    <h3 class="text-xl font-bold text-white" id="resumenIngresos">$0</h3>
                 </div>
-                <div class="glass rounded-2xl p-4 shadow-sm flex flex-col justify-between">
-                    <div class="flex items-center gap-2 mb-2 text-rose-500">
+                <div class="glass rounded-2xl p-4 flex flex-col justify-between">
+                    <div class="flex items-center gap-2 mb-2 text-rose-400">
                         <i class="fas fa-arrow-up"></i> <span class="text-xs font-bold uppercase">Gastos</span>
                     </div>
-                    <h3 class="text-xl font-bold" id="resumenGastos">$0</h3>
+                    <h3 class="text-xl font-bold text-white" id="resumenGastos">$0</h3>
                 </div>
             </div>
 
-            <div class="glass rounded-2xl p-4 shadow-sm mb-4">
-                <h3 class="text-sm font-bold text-gray-600 dark:text-gray-300 mb-2">Distribución de Gastos</h3>
+            <div class="glass rounded-2xl p-4 mb-4">
+                <h3 class="text-sm font-bold text-gray-300 mb-2">Distribución de Gastos</h3>
                 <div class="h-48 relative flex justify-center">
                     <canvas id="chartGastos"></canvas>
                     <div id="noDataChart" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm hidden">Sin gastos este mes</div>
@@ -102,33 +103,33 @@
 
         <!-- SECCIÓN: HISTORIAL -->
         <section id="view-historial" class="hidden animate-fade-in">
-            <h2 class="text-xl font-bold mb-4">Historial</h2>
+            <h2 class="text-xl font-bold mb-4 text-white">Historial</h2>
             <div class="flex gap-2 mb-4 overflow-x-auto hide-scrollbar">
                 <button onclick="filtrarHistorial('todos')" class="filtro-btn px-4 py-1.5 rounded-full text-sm font-semibold bg-brand text-white">Todos</button>
-                <button onclick="filtrarHistorial('gasto')" class="filtro-btn px-4 py-1.5 rounded-full text-sm font-semibold glass text-gray-600 dark:text-gray-300">Gastos</button>
-                <button onclick="filtrarHistorial('ingreso')" class="filtro-btn px-4 py-1.5 rounded-full text-sm font-semibold glass text-gray-600 dark:text-gray-300">Ingresos</button>
+                <button onclick="filtrarHistorial('gasto')" class="filtro-btn px-4 py-1.5 rounded-full text-sm font-semibold glass text-gray-300">Gastos</button>
+                <button onclick="filtrarHistorial('ingreso')" class="filtro-btn px-4 py-1.5 rounded-full text-sm font-semibold glass text-gray-300">Ingresos</button>
             </div>
             <div id="listaHistorial" class="space-y-3"></div>
         </section>
 
         <!-- SECCIÓN: METAS Y PRÉSTAMOS -->
         <section id="view-metas" class="hidden animate-fade-in">
-            <h2 class="text-xl font-bold mb-4">Mis Metas</h2>
+            <h2 class="text-xl font-bold mb-4 text-white">Mis Metas</h2>
             <button onclick="abrirModalMeta()" class="w-full glass border-dashed border-2 border-brand/50 text-brand font-bold py-3 rounded-xl mb-4 hover:bg-brand hover:text-white transition">+ Nueva Meta de Ahorro</button>
             <div id="listaMetas" class="space-y-3 mb-8"></div>
 
-            <h2 class="text-xl font-bold mb-4">Préstamos</h2>
-            <button onclick="abrirModalPrestamo()" class="w-full glass border-dashed border-2 border-orange-400/50 text-orange-500 font-bold py-3 rounded-xl mb-4 hover:bg-orange-500 hover:text-white transition">+ Registrar Préstamo</button>
+            <h2 class="text-xl font-bold mb-4 text-white">Préstamos</h2>
+            <button onclick="abrirModalPrestamo()" class="w-full glass border-dashed border-2 border-orange-400/50 text-orange-400 font-bold py-3 rounded-xl mb-4 hover:bg-orange-500 hover:text-white transition">+ Registrar Préstamo</button>
             <div id="listaPrestamos" class="space-y-3"></div>
         </section>
 
         <!-- SECCIÓN: AJUSTES / PRESUPUESTO -->
         <section id="view-ajustes" class="hidden animate-fade-in">
-            <h2 class="text-xl font-bold mb-4">Ajustes Financieros</h2>
+            <h2 class="text-xl font-bold mb-4 text-white">Ajustes Financieros</h2>
             
-            <div class="glass rounded-2xl p-5 mb-4 shadow-sm">
-                <h3 class="font-bold text-sm mb-3">Regla de Ahorro Automático</h3>
-                <p class="text-xs text-gray-500 mb-4">¿Qué porcentaje de tus ingresos quieres apartar antes de calcular tu límite diario?</p>
+            <div class="glass rounded-2xl p-5 mb-4">
+                <h3 class="font-bold text-sm mb-3 text-white">Regla de Ahorro Automático</h3>
+                <p class="text-xs text-gray-400 mb-4">¿Qué porcentaje de tus ingresos quieres apartar antes de calcular tu límite diario?</p>
                 <div class="flex items-center gap-4">
                     <input type="range" id="inputAhorroPct" min="0" max="50" step="5" value="10" class="w-full accent-brand" oninput="document.getElementById('lblPct').innerText = this.value + '%'">
                     <span id="lblPct" class="font-bold text-brand text-lg">10%</span>
@@ -136,21 +137,21 @@
                 <button onclick="guardarAjustes()" class="mt-4 w-full bg-brand text-white py-2 rounded-lg text-sm font-bold">Guardar Cambios</button>
             </div>
 
-            <div class="glass rounded-2xl p-5 mb-4 shadow-sm border border-indigo-200 dark:border-indigo-900">
-                <h3 class="font-bold text-sm mb-1 text-brand">Actualizaciones de la App</h3>
-                <p class="text-xs text-gray-500 mb-3">El sistema de caché se actualiza solo. Si acabo de subir una mejora, presiona aquí.</p>
-                <button onclick="forzarActualizacion()" class="w-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 py-2 rounded-lg text-sm font-bold"><i class="fas fa-sync-alt mr-2"></i>Buscar Actualización</button>
+            <div class="glass rounded-2xl p-5 mb-4 border border-indigo-500/30">
+                <h3 class="font-bold text-sm mb-1 text-indigo-400">Actualizaciones de la App</h3>
+                <p class="text-xs text-gray-400 mb-3">El sistema de caché se actualiza solo. Si acabo de subir una mejora, presiona aquí.</p>
+                <button onclick="forzarActualizacion()" class="w-full bg-indigo-900/50 text-indigo-300 py-2 rounded-lg text-sm font-bold"><i class="fas fa-sync-alt mr-2"></i>Buscar Actualización</button>
             </div>
 
-            <div class="glass rounded-2xl p-5 mb-4 shadow-sm">
-                <h3 class="font-bold text-sm mb-3">Respaldo de Datos</h3>
+            <div class="glass rounded-2xl p-5 mb-4">
+                <h3 class="font-bold text-sm mb-3 text-white">Respaldo de Datos</h3>
                 <div class="flex flex-col gap-2">
-                    <button onclick="exportarDatos()" class="w-full bg-slate-200 dark:bg-slate-700 text-gray-800 dark:text-white py-2 rounded-lg text-sm font-bold"><i class="fas fa-download mr-2"></i>Exportar (Backup)</button>
-                    <button onclick="importarDatos()" class="w-full bg-slate-200 dark:bg-slate-700 text-gray-800 dark:text-white py-2 rounded-lg text-sm font-bold"><i class="fas fa-upload mr-2"></i>Importar Backup</button>
+                    <button onclick="exportarDatos()" class="w-full bg-slate-700 text-white py-2 rounded-lg text-sm font-bold"><i class="fas fa-download mr-2"></i>Exportar (Backup)</button>
+                    <button onclick="importarDatos()" class="w-full bg-slate-700 text-white py-2 rounded-lg text-sm font-bold"><i class="fas fa-upload mr-2"></i>Importar Backup</button>
                 </div>
             </div>
 
-            <button onclick="borrarTodo()" class="w-full bg-red-100 dark:bg-red-900/30 text-red-600 py-3 rounded-xl text-sm font-bold"><i class="fas fa-trash mr-2"></i>Borrar todos los datos</button>
+            <button onclick="borrarTodo()" class="w-full bg-red-900/30 text-red-400 py-3 rounded-xl text-sm font-bold"><i class="fas fa-trash mr-2"></i>Borrar todos los datos</button>
         </section>
 
     </main>
@@ -161,25 +162,25 @@
     </button>
 
     <!-- NAVEGACIÓN INFERIOR -->
-    <nav class="fixed bottom-0 w-full glass border-t border-gray-200 dark:border-slate-800 flex justify-around pt-3 pb-6 px-2 z-40">
-        <div class="nav-item active flex flex-col items-center justify-center w-16 cursor-pointer text-gray-500 dark:text-gray-400" onclick="cambiarVista('inicio', this)">
+    <nav class="fixed bottom-0 w-full glass border-t border-slate-800 flex justify-around pt-3 pb-6 px-2 z-40">
+        <div class="nav-item active flex flex-col items-center justify-center w-16 cursor-pointer text-gray-400" onclick="cambiarVista('inicio', this)">
             <i class="fas fa-home text-xl mb-1"></i><span class="text-[10px] font-bold">Inicio</span>
         </div>
-        <div class="nav-item flex flex-col items-center justify-center w-16 cursor-pointer text-gray-500 dark:text-gray-400" onclick="cambiarVista('historial', this)">
+        <div class="nav-item flex flex-col items-center justify-center w-16 cursor-pointer text-gray-400" onclick="cambiarVista('historial', this)">
             <i class="fas fa-list-ul text-xl mb-1"></i><span class="text-[10px] font-bold">Historial</span>
         </div>
         <div class="w-16"></div>
-        <div class="nav-item flex flex-col items-center justify-center w-16 cursor-pointer text-gray-500 dark:text-gray-400" onclick="cambiarVista('metas', this)">
+        <div class="nav-item flex flex-col items-center justify-center w-16 cursor-pointer text-gray-400" onclick="cambiarVista('metas', this)">
             <i class="fas fa-bullseye text-xl mb-1"></i><span class="text-[10px] font-bold">Metas</span>
         </div>
-        <div class="nav-item flex flex-col items-center justify-center w-16 cursor-pointer text-gray-500 dark:text-gray-400" onclick="cambiarVista('ajustes', this)">
+        <div class="nav-item flex flex-col items-center justify-center w-16 cursor-pointer text-gray-400" onclick="cambiarVista('ajustes', this)">
             <i class="fas fa-cog text-xl mb-1"></i><span class="text-[10px] font-bold">Ajustes</span>
         </div>
     </nav>
 
     <script>
-        // VERSIÓN ACTUAL DE LA APP (Solo informativa visual)
-        const APP_VERSION = "2.2"; 
+        // VERSIÓN ACTUAL DE LA APP
+        const APP_VERSION = "2.3-dark"; 
 
         let data = JSON.parse(localStorage.getItem('finzenDataPro')) || {
             transacciones: [], metas: [], prestamos: [], nextId: 1, nextIdPrestamo: 1, ahorroPct: 10
@@ -216,18 +217,6 @@
             setTimeout(() => {
                 window.location.reload();
             }, 1500);
-        }
-
-        // --- TEMAS ---
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-        function toggleTheme() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-            if(chartInstance) renderChart();
         }
 
         // --- UTILIDADES ---
@@ -311,9 +300,9 @@
             filtroActual = tipo;
             document.querySelectorAll('.filtro-btn').forEach(b => {
                 b.classList.remove('bg-brand', 'text-white');
-                b.classList.add('glass', 'text-gray-600', 'dark:text-gray-300');
+                b.classList.add('glass', 'text-gray-300');
             });
-            event.currentTarget.classList.remove('glass', 'text-gray-600', 'dark:text-gray-300');
+            event.currentTarget.classList.remove('glass', 'text-gray-300');
             event.currentTarget.classList.add('bg-brand', 'text-white');
             renderHistorial();
         }
@@ -336,17 +325,17 @@
                 return `
                     <div class="glass rounded-xl p-3 flex justify-between items-center mb-2">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center ${esIngreso ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center ${esIngreso ? 'bg-emerald-900/50 text-emerald-400' : 'bg-rose-900/50 text-rose-400'}">
                                 <i class="fas ${icono}"></i>
                             </div>
                             <div>
-                                <p class="font-bold text-sm">${t.categoria}</p>
-                                <p class="text-xs text-gray-500">${t.fecha} ${t.descripcion ? '• '+t.descripcion : ''}</p>
+                                <p class="font-bold text-sm text-gray-100">${t.categoria}</p>
+                                <p class="text-xs text-gray-400">${t.fecha} ${t.descripcion ? '• '+t.descripcion : ''}</p>
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="font-bold ${esIngreso ? 'text-emerald-500' : 'text-gray-800 dark:text-gray-200'}">${esIngreso ? '+' : '-'}${formatMoney(t.monto)}</p>
-                            <button onclick="borrarTransaccion(${t.id})" class="text-xs text-red-400 hover:text-red-600 mt-1"><i class="fas fa-trash"></i></button>
+                            <p class="font-bold ${esIngreso ? 'text-emerald-400' : 'text-gray-200'}">${esIngreso ? '+' : '-'}${formatMoney(t.monto)}</p>
+                            <button onclick="borrarTransaccion(${t.id})" class="text-xs text-red-400 hover:text-red-300 mt-1"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 `;
@@ -354,7 +343,7 @@
         }
 
         function borrarTransaccion(id) {
-            Swal.fire({ title: '¿Borrar movimiento?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#64748b', confirmButtonText: 'Sí', cancelButtonText: 'No' }).then((result) => {
+            Swal.fire({ title: '¿Borrar movimiento?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#475569', confirmButtonText: 'Sí', cancelButtonText: 'No' }).then((result) => {
                 if (result.isConfirmed) {
                     data.transacciones = data.transacciones.filter(t => t.id !== id);
                     saveData();
@@ -380,12 +369,11 @@
             }
             noData.classList.add('hidden');
             document.getElementById('chartGastos').style.display = 'block';
-            const isDark = document.documentElement.classList.contains('dark');
 
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: { labels: Object.keys(cats), datasets: [{ data: Object.values(cats), backgroundColor: ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#64748b'], borderWidth: 0, hoverOffset: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: isDark ? '#cbd5e1' : '#475569', boxWidth: 10, font: {size: 11, family: 'Inter'} } } } }
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: '#cbd5e1', boxWidth: 10, font: {size: 11, family: 'Inter'} } } } }
             });
         }
 
@@ -393,8 +381,8 @@
         const htmlTransaccion = `
             <div class="flex flex-col gap-3 text-left">
                 <div class="flex gap-2">
-                    <button id="btnSwalGasto" onclick="setSwalTipo('gasto')" class="flex-1 py-2 rounded-lg font-bold text-white bg-rose-500">Gasto</button>
-                    <button id="btnSwalIngreso" onclick="setSwalTipo('ingreso')" class="flex-1 py-2 rounded-lg font-bold bg-gray-200 text-gray-600">Ingreso</button>
+                    <button id="btnSwalGasto" onclick="setSwalTipo('gasto')" class="flex-1 py-2 rounded-lg font-bold text-white bg-rose-600">Gasto</button>
+                    <button id="btnSwalIngreso" onclick="setSwalTipo('ingreso')" class="flex-1 py-2 rounded-lg font-bold bg-slate-700 text-gray-300">Ingreso</button>
                 </div>
                 <input id="swalMonto" type="number" class="swal2-input !m-0 !w-full" placeholder="Monto $" required>
                 <select id="swalCat" class="swal2-select !m-0 !w-full !max-w-full"></select>
@@ -412,12 +400,12 @@
             const btnI = document.getElementById('btnSwalIngreso');
             const select = document.getElementById('swalCat');
             if (tipo === 'gasto') {
-                btnG.className = 'flex-1 py-2 rounded-lg font-bold text-white bg-rose-500';
-                btnI.className = 'flex-1 py-2 rounded-lg font-bold bg-gray-200 text-gray-600';
+                btnG.className = 'flex-1 py-2 rounded-lg font-bold text-white bg-rose-600';
+                btnI.className = 'flex-1 py-2 rounded-lg font-bold bg-slate-700 text-gray-300';
                 select.innerHTML = CAT_GASTO.map(c => `<option value="${c}">${c}</option>`).join('');
             } else {
-                btnG.className = 'flex-1 py-2 rounded-lg font-bold bg-gray-200 text-gray-600';
-                btnI.className = 'flex-1 py-2 rounded-lg font-bold text-white bg-emerald-500';
+                btnG.className = 'flex-1 py-2 rounded-lg font-bold bg-slate-700 text-gray-300';
+                btnI.className = 'flex-1 py-2 rounded-lg font-bold text-white bg-emerald-600';
                 select.innerHTML = CAT_INGRESO.map(c => `<option value="${c}">${c}</option>`).join('');
             }
         }
@@ -481,14 +469,14 @@
                 return `
                     <div class="glass rounded-xl p-4">
                         <div class="flex justify-between items-center mb-1">
-                            <p class="font-bold text-sm">${m.nombre}</p>
+                            <p class="font-bold text-sm text-gray-100">${m.nombre}</p>
                             <span class="text-xs font-bold text-brand">${pct}%</span>
                         </div>
-                        <p class="text-xs text-gray-500 mb-3">${formatMoney(m.ahorrado)} de ${formatMoney(m.objetivo)}</p>
-                        <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5 mb-3">
+                        <p class="text-xs text-gray-400 mb-3">${formatMoney(m.ahorrado)} de ${formatMoney(m.objetivo)}</p>
+                        <div class="w-full bg-slate-700 rounded-full h-1.5 mb-3">
                             <div class="bg-brand h-1.5 rounded-full" style="width: ${pct}%"></div>
                         </div>
-                        <button onclick="abonarMeta(${i})" class="w-full py-1.5 text-xs font-bold text-brand bg-brand/10 rounded-lg">+ Abonar</button>
+                        <button onclick="abonarMeta(${i})" class="w-full py-1.5 text-xs font-bold text-brand bg-brand/10 rounded-lg hover:bg-brand/20 transition">+ Abonar</button>
                     </div>
                 `;
             }).join('');
@@ -543,12 +531,12 @@
                 return `
                     <div class="glass rounded-xl p-4 flex justify-between items-center ${pend === 0 ? 'opacity-50' : ''}">
                         <div>
-                            <p class="font-bold text-sm">${p.persona}</p>
-                            <p class="text-xs font-semibold ${p.tipo === 'prestado' ? 'text-emerald-500' : 'text-rose-500'}">${p.tipo === 'prestado' ? 'Te debe' : 'Le debes'}</p>
+                            <p class="font-bold text-sm text-gray-100">${p.persona}</p>
+                            <p class="text-xs font-semibold ${p.tipo === 'prestado' ? 'text-emerald-400' : 'text-rose-400'}">${p.tipo === 'prestado' ? 'Te debe' : 'Le debes'}</p>
                         </div>
                         <div class="text-right">
-                            <p class="font-bold">${formatMoney(pend)}</p>
-                            ${pend > 0 ? `<button onclick="pagarPrestamo(${p.id})" class="text-[10px] bg-brand text-white px-2 py-1 rounded mt-1">Abonar</button>` : ''}
+                            <p class="font-bold text-gray-200">${formatMoney(pend)}</p>
+                            ${pend > 0 ? `<button onclick="pagarPrestamo(${p.id})" class="text-[10px] bg-brand text-white px-2 py-1 rounded mt-1 hover:bg-brandDark transition">Abonar</button>` : ''}
                         </div>
                     </div>
                 `;
