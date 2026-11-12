@@ -1,248 +1,219 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#4f46e5">
-    <title>💰 Finzen</title>
+    <meta name="theme-color" content="#6366f1">
+    <title>Finzen - Gestor Financiero</title>
     <link rel="manifest" href="manifest.json">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* Evitar el rebote de la pantalla en iOS y hacerlo sentir nativo */
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: #f3f4f6;
-            -webkit-tap-highlight-color: transparent;
-            padding-bottom: 80px; /* Espacio para la barra de navegación */
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { brand: '#6366f1', brandDark: '#4f46e5' },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
         }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75rem; color: #6b7280; transition: 0.2s; }
-        .nav-item.active { color: #4f46e5; }
-        .nav-item i { font-size: 1.25rem; margin-bottom: 4px; }
-        .hidden-section { display: none; }
-        .card { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 12px; }
-        input, select { font-size: 16px !important; /* Evita el zoom automático en iOS al tocar inputs */ }
+    </script>
+    <!-- FontAwesome & SweetAlert2 & Chart.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: 90px; transition: background-color 0.3s, color 0.3s; }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); }
+        .dark .glass { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.05); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .fab { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 50; box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.6); }
+        .nav-item { transition: all 0.2s; }
+        .nav-item.active { color: #6366f1; transform: translateY(-2px); }
+        .dark .nav-item.active { color: #818cf8; }
+        input, select { font-size: 16px !important; }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 dark:bg-slate-900 dark:text-gray-100 min-h-screen">
 
-    <!-- ENCABEZADO -->
-    <header class="bg-indigo-600 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-md">
-        <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Finzen</h1>
-        <span class="text-xs bg-indigo-700 px-2 py-1 rounded-full" id="mesActualTexto">Mes</span>
+    <!-- HEADER -->
+    <header class="px-5 pt-6 pb-4 flex justify-between items-center">
+        <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Hola,</p>
+            <h1 class="text-2xl font-extrabold tracking-tight">Tus Finanzas</h1>
+        </div>
+        <button onclick="toggleTheme()" class="w-10 h-10 rounded-full glass flex items-center justify-center text-gray-600 dark:text-gray-300">
+            <i class="fas fa-moon dark:hidden"></i>
+            <i class="fas fa-sun hidden dark:block"></i>
+        </button>
     </header>
 
     <!-- CONTENIDO PRINCIPAL -->
-    <main class="p-4 max-w-md mx-auto">
+    <main class="px-5 max-w-lg mx-auto">
         
-        <!-- SECCIÓN: DASHBOARD -->
-        <section id="dashboard" class="block">
-            <div class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-5 rounded-2xl mb-4 shadow-lg">
-                <p class="text-sm opacity-90">Límite de gasto para HOY</p>
-                <h1 class="text-4xl font-extrabold mt-1" id="limiteDiario">$0</h1>
-                <p id="estadoLimite" class="mt-2 text-sm font-medium">Cargando...</p>
+        <!-- SECCIÓN: INICIO (DASHBOARD) -->
+        <section id="view-inicio" class="block animate-fade-in">
+            <!-- Tarjeta Principal Límite Diario -->
+            <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-500/20 mb-6 relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
+                <p class="text-indigo-100 text-sm font-medium">Límite de gasto para hoy</p>
+                <h2 class="text-4xl font-extrabold mt-1 mb-2" id="lblLimiteDiario">$0</h2>
+                <div class="w-full bg-black/20 rounded-full h-2 mb-2">
+                    <div id="barraProgreso" class="bg-white h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <p id="lblEstadoLimite" class="text-xs text-indigo-100 font-medium">Calculando...</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="card mb-0">
-                    <p class="text-gray-500 text-xs font-semibold uppercase">Ingresos (Mes)</p>
-                    <h3 class="text-xl font-bold text-green-500" id="totalIngresos">$0</h3>
+            <!-- Resumen -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="glass rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center gap-2 mb-2 text-emerald-500">
+                        <i class="fas fa-arrow-down"></i> <span class="text-xs font-bold uppercase">Ingresos</span>
+                    </div>
+                    <h3 class="text-xl font-bold" id="resumenIngresos">$0</h3>
                 </div>
-                <div class="card mb-0">
-                    <p class="text-gray-500 text-xs font-semibold uppercase">Gastos (Mes)</p>
-                    <h3 class="text-xl font-bold text-red-500" id="totalGastos">$0</h3>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3 class="font-bold text-gray-700 mb-2 text-sm">Gastos por Categoría</h3>
-                <div class="relative h-48 w-full flex justify-center">
-                    <canvas id="graficoGastos"></canvas>
+                <div class="glass rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center gap-2 mb-2 text-rose-500">
+                        <i class="fas fa-arrow-up"></i> <span class="text-xs font-bold uppercase">Gastos</span>
+                    </div>
+                    <h3 class="text-xl font-bold" id="resumenGastos">$0</h3>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <div class="card mb-0 border-l-4 border-green-500">
-                    <p class="text-gray-500 text-xs font-semibold">💚 Me deben</p>
-                    <p class="text-lg font-bold text-gray-800" id="meDeben">$0</p>
-                </div>
-                <div class="card mb-0 border-l-4 border-red-500">
-                    <p class="text-gray-500 text-xs font-semibold">❤️ Yo debo</p>
-                    <p class="text-lg font-bold text-gray-800" id="yoDebo">$0</p>
+            <!-- Gráfico -->
+            <div class="glass rounded-2xl p-4 shadow-sm mb-4">
+                <h3 class="text-sm font-bold text-gray-600 dark:text-gray-300 mb-2">Distribución de Gastos</h3>
+                <div class="h-48 relative flex justify-center">
+                    <canvas id="chartGastos"></canvas>
+                    <div id="noDataChart" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm hidden">Sin gastos este mes</div>
                 </div>
             </div>
         </section>
 
-        <!-- SECCIÓN: REGISTRAR -->
-        <section id="registrar" class="hidden-section">
-            <h2 class="text-xl font-bold mb-3 text-gray-800">💸 Registrar</h2>
-            
-            <!-- Botones tipo Toggle -->
-            <div class="flex bg-gray-200 rounded-lg p-1 mb-4">
-                <button onclick="setTipo('gasto')" id="btnTipoGasto" class="flex-1 py-2 rounded-md font-semibold text-white bg-red-500 transition">Gasto</button>
-                <button onclick="setTipo('ingreso')" id="btnTipoIngreso" class="flex-1 py-2 rounded-md font-semibold text-gray-600 transition">Ingreso</button>
+        <!-- SECCIÓN: HISTORIAL -->
+        <section id="view-historial" class="hidden animate-fade-in">
+            <h2 class="text-xl font-bold mb-4">Historial</h2>
+            <div class="flex gap-2 mb-4 overflow-x-auto hide-scrollbar">
+                <button onclick="filtrarHistorial('todos')" class="filtro-btn px-4 py-1.5 rounded-full text-sm font-semibold bg-brand text-white">Todos</button>
+                <button onclick="filtrarHistorial('gasto')" class="filtro-btn px-4 py-1.5 rounded-full text-sm font-semibold glass text-gray-600 dark:text-gray-300">Gastos</button>
+                <button onclick="filtrarHistorial('ingreso')" class="filtro-btn px-4 py-1.5 rounded-full text-sm font-semibold glass text-gray-600 dark:text-gray-300">Ingresos</button>
             </div>
-
-            <div class="card">
-                <form id="formTransaccion" onsubmit="guardarTransaccion(event)">
-                    <input type="hidden" id="tipoTransaccion" value="gasto">
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Monto ($)</label>
-                        <input type="number" id="montoTransaccion" step="0.01" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0.00" required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Categoría</label>
-                        <select id="categoriaTransaccion" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"></select>
-                    </div>
-                    <div class="mb-5">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Descripción (Opcional)</label>
-                        <input type="text" id="descTransaccion" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ej: Almuerzo">
-                    </div>
-                    <button type="submit" class="bg-indigo-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-indigo-700 w-full shadow-md transition">Guardar Movimiento</button>
-                </form>
-            </div>
-        </section>
-
-        <!-- SECCIÓN: PRESUPUESTO -->
-        <section id="presupuesto" class="hidden-section">
-            <h2 class="text-xl font-bold mb-3 text-gray-800">🎯 Presupuesto</h2>
-            <div class="card">
-                <h3 class="font-bold text-gray-700 mb-3 text-sm border-b pb-2">Desglose del mes</h3>
-                <ul class="space-y-3 text-sm">
-                    <li class="flex justify-between items-center"><span>Ingreso total</span> <b id="desgloseIngreso" class="text-green-600 text-base">$0</b></li>
-                    <li class="flex justify-between items-center"><span>Gastos realizados</span> <b id="desgloseGasto" class="text-red-600 text-base">$0</b></li>
-                    <li class="flex justify-between items-center"><span>Ahorro sugerido (10%)</span> <b id="desgloseAhorro" class="text-blue-600 text-base">$0</b></li>
-                    <li class="flex justify-between items-center"><span>Deudas pendientes</span> <b id="desgloseDeudas" class="text-orange-500 text-base">$0</b></li>
-                </ul>
-                <div class="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center">
-                    <span class="font-bold text-gray-800">Disponible libre</span> 
-                    <b id="desgloseDisponible" class="text-indigo-600 text-xl">$0</b>
-                </div>
-            </div>
-            
-            <div class="bg-green-50 p-4 rounded-xl border border-green-200 text-center">
-                <p class="text-green-800 text-sm font-bold mb-1">💡 Límite diario sugerido</p>
-                <p class="text-3xl font-extrabold text-green-600" id="limiteDiarioDesglose">$0</p>
-                <p class="text-xs text-green-700 mt-1" id="diasRestantesTexto">Quedan 0 días</p>
-            </div>
-        </section>
-
-        <!-- SECCIÓN: PRÉSTAMOS -->
-        <section id="prestamos" class="hidden-section">
-            <h2 class="text-xl font-bold mb-3 text-gray-800">🤝 Préstamos</h2>
-            
-            <!-- Botón para abrir formulario -->
-            <button onclick="document.getElementById('formPrestamoContainer').classList.toggle('hidden')" class="w-full bg-white border border-indigo-200 text-indigo-600 py-3 rounded-xl font-bold mb-3 shadow-sm">+ Nuevo Préstamo</button>
-
-            <div id="formPrestamoContainer" class="hidden card bg-indigo-50 border border-indigo-100 mb-4">
-                <form id="formPrestamo" onsubmit="guardarPrestamo(event)">
-                    <div class="mb-3">
-                        <select id="tipoPrestamo" class="w-full p-3 bg-white border border-gray-300 rounded-lg text-sm">
-                            <option value="prestado">💚 Me deben (Yo presté)</option>
-                            <option value="debo">❤️ Yo debo (Me prestaron)</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <input type="text" id="personaPrestamo" class="w-full p-3 bg-white border border-gray-300 rounded-lg text-sm" placeholder="Nombre de la persona" required>
-                    </div>
-                    <div class="mb-3">
-                        <input type="number" id="montoPrestamo" min="1" class="w-full p-3 bg-white border border-gray-300 rounded-lg text-sm" placeholder="Monto $" required>
-                    </div>
-                    <button type="submit" class="bg-indigo-600 text-white py-2 rounded-lg w-full text-sm font-bold">Guardar</button>
-                </form>
-            </div>
-
-            <div id="listaPrestamos" class="space-y-3">
+            <div id="listaHistorial" class="space-y-3">
                 <!-- Se llena con JS -->
             </div>
         </section>
 
-        <!-- SECCIÓN: METAS -->
-        <section id="metas" class="hidden-section">
-            <h2 class="text-xl font-bold mb-3 text-gray-800">🏦 Metas</h2>
+        <!-- SECCIÓN: METAS Y PRÉSTAMOS -->
+        <section id="view-metas" class="hidden animate-fade-in">
+            <h2 class="text-xl font-bold mb-4">Mis Metas</h2>
+            <button onclick="abrirModalMeta()" class="w-full glass border-dashed border-2 border-brand/50 text-brand font-bold py-3 rounded-xl mb-4 hover:bg-brand hover:text-white transition">+ Nueva Meta de Ahorro</button>
+            <div id="listaMetas" class="space-y-3 mb-8"></div>
+
+            <h2 class="text-xl font-bold mb-4">Préstamos</h2>
+            <button onclick="abrirModalPrestamo()" class="w-full glass border-dashed border-2 border-orange-400/50 text-orange-500 font-bold py-3 rounded-xl mb-4 hover:bg-orange-500 hover:text-white transition">+ Registrar Préstamo</button>
+            <div id="listaPrestamos" class="space-y-3"></div>
+        </section>
+
+        <!-- SECCIÓN: AJUSTES / PRESUPUESTO -->
+        <section id="view-ajustes" class="hidden animate-fade-in">
+            <h2 class="text-xl font-bold mb-4">Ajustes Financieros</h2>
             
-            <button onclick="document.getElementById('formMetaContainer').classList.toggle('hidden')" class="w-full bg-white border border-green-200 text-green-600 py-3 rounded-xl font-bold mb-3 shadow-sm">+ Nueva Meta</button>
-
-            <div id="formMetaContainer" class="hidden card bg-green-50 border border-green-100 mb-4">
-                <form id="formMeta" onsubmit="guardarMeta(event)">
-                    <div class="mb-3">
-                        <input type="text" id="nombreMeta" class="w-full p-3 bg-white border border-gray-300 rounded-lg text-sm" placeholder="Ej: Fondo de emergencia" required>
-                    </div>
-                    <div class="mb-3">
-                        <input type="number" id="objetivoMeta" min="1" class="w-full p-3 bg-white border border-gray-300 rounded-lg text-sm" placeholder="Objetivo $" required>
-                    </div>
-                    <button type="submit" class="bg-green-600 text-white py-2 rounded-lg w-full text-sm font-bold">Crear Meta</button>
-                </form>
+            <div class="glass rounded-2xl p-5 mb-4 shadow-sm">
+                <h3 class="font-bold text-sm mb-3">Regla de Ahorro Automático</h3>
+                <p class="text-xs text-gray-500 mb-4">¿Qué porcentaje de tus ingresos quieres apartar antes de calcular tu límite diario?</p>
+                <div class="flex items-center gap-4">
+                    <input type="range" id="inputAhorroPct" min="0" max="50" step="5" value="10" class="w-full accent-brand" oninput="document.getElementById('lblPct').innerText = this.value + '%'">
+                    <span id="lblPct" class="font-bold text-brand text-lg">10%</span>
+                </div>
+                <button onclick="guardarAjustes()" class="mt-4 w-full bg-brand text-white py-2 rounded-lg text-sm font-bold">Guardar Cambios</button>
             </div>
 
-            <div id="listaMetas" class="space-y-3">
-                <!-- Se llena con JS -->
+            <div class="glass rounded-2xl p-5 mb-4 shadow-sm">
+                <h3 class="font-bold text-sm mb-3">Respaldo de Datos</h3>
+                <div class="flex flex-col gap-2">
+                    <button onclick="exportarDatos()" class="w-full bg-slate-200 dark:bg-slate-700 text-gray-800 dark:text-white py-2 rounded-lg text-sm font-bold"><i class="fas fa-download mr-2"></i>Exportar (Backup)</button>
+                    <button onclick="importarDatos()" class="w-full bg-slate-200 dark:bg-slate-700 text-gray-800 dark:text-white py-2 rounded-lg text-sm font-bold"><i class="fas fa-upload mr-2"></i>Importar Backup</button>
+                </div>
             </div>
+
+            <button onclick="borrarTodo()" class="w-full bg-red-100 dark:bg-red-900/30 text-red-600 py-3 rounded-xl text-sm font-bold"><i class="fas fa-trash mr-2"></i>Borrar todos los datos</button>
         </section>
 
     </main>
 
-    <!-- BARRA DE NAVEGACIÓN INFERIOR (ESTILO APP) -->
-    <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around pb-safe pt-2 pb-2 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-        <div class="nav-item active" onclick="showSection('dashboard', this)">
-            <i class="fas fa-home"></i><span>Inicio</span>
+    <!-- BOTÓN FLOTANTE (FAB) -->
+    <button onclick="abrirModalTransaccion()" class="fab w-16 h-16 bg-brand text-white rounded-full flex items-center justify-center text-2xl hover:scale-105 transition-transform">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- NAVEGACIÓN INFERIOR -->
+    <nav class="fixed bottom-0 w-full glass border-t border-gray-200 dark:border-slate-800 flex justify-around pt-3 pb-6 px-2 z-40">
+        <div class="nav-item active flex flex-col items-center justify-center w-16 cursor-pointer text-gray-500 dark:text-gray-400" onclick="cambiarVista('inicio', this)">
+            <i class="fas fa-home text-xl mb-1"></i><span class="text-[10px] font-bold">Inicio</span>
         </div>
-        <div class="nav-item" onclick="showSection('registrar', this)">
-            <i class="fas fa-plus-circle"></i><span>Registrar</span>
+        <div class="nav-item flex flex-col items-center justify-center w-16 cursor-pointer text-gray-500 dark:text-gray-400" onclick="cambiarVista('historial', this)">
+            <i class="fas fa-list-ul text-xl mb-1"></i><span class="text-[10px] font-bold">Historial</span>
         </div>
-        <div class="nav-item" onclick="showSection('presupuesto', this)">
-            <i class="fas fa-chart-pie"></i><span>Límite</span>
+        <div class="w-16"></div> <!-- Espacio para el FAB -->
+        <div class="nav-item flex flex-col items-center justify-center w-16 cursor-pointer text-gray-500 dark:text-gray-400" onclick="cambiarVista('metas', this)">
+            <i class="fas fa-bullseye text-xl mb-1"></i><span class="text-[10px] font-bold">Metas</span>
         </div>
-        <div class="nav-item" onclick="showSection('prestamos', this)">
-            <i class="fas fa-handshake"></i><span>Préstamos</span>
-        </div>
-        <div class="nav-item" onclick="showSection('metas', this)">
-            <i class="fas fa-bullseye"></i><span>Metas</span>
+        <div class="nav-item flex flex-col items-center justify-center w-16 cursor-pointer text-gray-500 dark:text-gray-400" onclick="cambiarVista('ajustes', this)">
+            <i class="fas fa-cog text-xl mb-1"></i><span class="text-[10px] font-bold">Ajustes</span>
         </div>
     </nav>
 
-    <!-- LÓGICA JAVASCRIPT -->
     <script>
-        let data = JSON.parse(localStorage.getItem('finzenDataMobile')) || {
-            transacciones: [], metas: [], prestamos: [], nextId: 1, nextIdPrestamo: 1
+        // --- ESTADO GLOBAL ---
+        let data = JSON.parse(localStorage.getItem('finzenDataPro')) || {
+            transacciones: [], metas: [], prestamos: [], nextId: 1, nextIdPrestamo: 1, ahorroPct: 10
         };
-
-        const CATEGORIAS_GASTO = ["Alimentación", "Transporte", "Vivienda", "Servicios", "Salud", "Entretenimiento", "Educación", "Ropa", "Restaurantes", "Suscripciones", "Ahorro", "Otros"];
-        const CATEGORIAS_INGRESO = ["Salario", "Freelance", "Inversiones", "Regalo", "Otros"];
         let chartInstance = null;
-        let tipoActual = 'gasto';
+        let filtroActual = 'todos';
 
-        function saveData() {
-            localStorage.setItem('finzenDataMobile', JSON.stringify(data));
-            renderApp();
+        // --- TEMAS ---
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            if(chartInstance) renderChart(); // Redibujar gráfico con nuevos colores de texto
         }
 
+        // --- UTILIDADES ---
         const formatMoney = (num) => '$' + Math.round(num).toLocaleString('es-CO');
         const mesActual = () => new Date().toISOString().slice(0, 7);
         const hoy = () => new Date().toISOString().split('T')[0];
-
-        function diasRestantesMes() {
-            const d = new Date();
-            return Math.max(new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate() - d.getDate(), 1);
-        }
-
-        // NAVEGACIÓN
-        function showSection(id, element) {
-            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden-section'));
-            document.getElementById(id).classList.remove('hidden-section');
-            
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            element.classList.add('active');
-            window.scrollTo(0,0); // Subir al inicio al cambiar de pestaña
+        const diasRestantesMes = () => Math.max(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate(), 1);
+        
+        function saveData() {
+            localStorage.setItem('finzenDataPro', JSON.stringify(data));
             renderApp();
         }
 
-        // LÓGICA
-        function calcularDatos() {
+        // --- NAVEGACIÓN ---
+        function cambiarVista(id, element) {
+            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`view-${id}`).classList.remove('hidden');
+            
+            if (element) {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                element.classList.add('active');
+            }
+            window.scrollTo(0,0);
+            if (id === 'inicio') renderChart();
+        }
+
+        // --- LÓGICA FINANCIERA ---
+        function calcularInfo() {
             const mes = mesActual();
             let ing = 0, gas = 0, gasHoy = 0;
             
@@ -256,7 +227,7 @@
                 }
             });
 
-            const ahorro = ing * 0.10;
+            const ahorro = ing * (data.ahorroPct / 100);
             const deudas = data.prestamos.filter(p => p.tipo === 'debo').reduce((acc, p) => acc + (p.monto - p.pagado), 0);
             const disponible = ing - gas - ahorro - deudas;
             const dias = diasRestantesMes();
@@ -265,47 +236,106 @@
             return { ing, gas, gasHoy, ahorro, deudas, disponible, limiteDiario, dias };
         }
 
-        // RENDERIZADO
+        // --- RENDERIZADO PRINCIPAL ---
         function renderApp() {
-            const info = calcularDatos();
+            const info = calcularInfo();
             
-            // Setear mes en el header
-            const opciones = { month: 'short', year: 'numeric' };
-            document.getElementById('mesActualTexto').innerText = new Date().toLocaleDateString('es', opciones).toUpperCase();
-
             // Dashboard
-            document.getElementById('limiteDiario').innerText = formatMoney(info.limiteDiario);
-            document.getElementById('totalIngresos').innerText = formatMoney(info.ing);
-            document.getElementById('totalGastos').innerText = formatMoney(info.gas);
+            document.getElementById('lblLimiteDiario').innerText = formatMoney(info.limiteDiario);
+            document.getElementById('resumenIngresos').innerText = formatMoney(info.ing);
+            document.getElementById('resumenGastos').innerText = formatMoney(info.gas);
+            
+            const pctGastado = info.limiteDiario > 0 ? (info.gasHoy / info.limiteDiario) * 100 : 100;
+            const barra = document.getElementById('barraProgreso');
+            barra.style.width = Math.min(pctGastado, 100) + '%';
+            barra.className = pctGastado > 100 ? 'bg-rose-500 h-2 rounded-full transition-all' : 'bg-white h-2 rounded-full transition-all';
 
-            const estado = document.getElementById('estadoLimite');
+            const lblEstado = document.getElementById('lblEstadoLimite');
             if (info.gasHoy >= info.limiteDiario && info.limiteDiario > 0) {
-                estado.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Superaste el límite (Hoy: ${formatMoney(info.gasHoy)})`;
-                estado.className = "mt-2 text-sm text-red-100 font-bold bg-red-500/50 inline-block px-2 py-1 rounded";
+                lblEstado.innerHTML = `⚠️ Superaste el límite hoy (Gastaste: ${formatMoney(info.gasHoy)})`;
             } else {
-                estado.innerHTML = `<i class="fas fa-check-circle"></i> Puedes gastar ${formatMoney(info.limiteDiario - info.gasHoy)} más hoy`;
-                estado.className = "mt-2 text-sm text-green-100 font-bold bg-green-500/50 inline-block px-2 py-1 rounded";
+                lblEstado.innerHTML = `✅ Te quedan ${formatMoney(info.limiteDiario - info.gasHoy)} para hoy`;
             }
 
-            // Préstamos Dashboard
-            document.getElementById('meDeben').innerText = formatMoney(data.prestamos.filter(p => p.tipo === 'prestado').reduce((acc, p) => acc + (p.monto - p.pagado), 0));
-            document.getElementById('yoDebo').innerText = formatMoney(data.prestamos.filter(p => p.tipo === 'debo').reduce((acc, p) => acc + (p.monto - p.pagado), 0));
+            // Ajustes
+            document.getElementById('inputAhorroPct').value = data.ahorroPct;
+            document.getElementById('lblPct').innerText = data.ahorroPct + '%';
 
-            // Presupuesto
-            document.getElementById('desgloseIngreso').innerText = formatMoney(info.ing);
-            document.getElementById('desgloseGasto').innerText = formatMoney(info.gas);
-            document.getElementById('desgloseAhorro').innerText = formatMoney(info.ahorro);
-            document.getElementById('desgloseDeudas').innerText = formatMoney(info.deudas);
-            document.getElementById('desgloseDisponible').innerText = formatMoney(info.disponible);
-            document.getElementById('limiteDiarioDesglose').innerText = formatMoney(info.limiteDiario);
-            document.getElementById('diasRestantesTexto').innerText = `Quedan ${info.dias} días de mes`;
-
-            renderGrafico();
-            renderPrestamos();
+            renderHistorial();
             renderMetas();
+            renderPrestamos();
+            if(!document.getElementById('view-inicio').classList.contains('hidden')) renderChart();
         }
 
-        function renderGrafico() {
+        // --- HISTORIAL ---
+        function filtrarHistorial(tipo) {
+            filtroActual = tipo;
+            document.querySelectorAll('.filtro-btn').forEach(b => {
+                b.classList.remove('bg-brand', 'text-white');
+                b.classList.add('glass', 'text-gray-600', 'dark:text-gray-300');
+            });
+            event.currentTarget.classList.remove('glass', 'text-gray-600', 'dark:text-gray-300');
+            event.currentTarget.classList.add('bg-brand', 'text-white');
+            renderHistorial();
+        }
+
+        function renderHistorial() {
+            const cont = document.getElementById('listaHistorial');
+            let txs = [...data.transacciones].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            if (filtroActual !== 'todos') txs = txs.filter(t => t.tipo === filtroActual);
+
+            if (txs.length === 0) {
+                cont.innerHTML = '<p class="text-center text-sm text-gray-500 py-8">No hay movimientos aún.</p>';
+                return;
+            }
+
+            const iconos = { "Alimentación": "fa-utensils", "Transporte": "fa-car", "Vivienda": "fa-home", "Servicios": "fa-bolt", "Salud": "fa-heartbeat", "Entretenimiento": "fa-gamepad", "Educación": "fa-book", "Ropa": "fa-tshirt", "Restaurantes": "fa-pizza-slice", "Suscripciones": "fa-tv", "Ahorro": "fa-piggy-bank", "Otros": "fa-box", "Salario": "fa-money-bill-wave", "Freelance": "fa-laptop", "Inversiones": "fa-chart-line" };
+
+            cont.innerHTML = txs.map(t => {
+                const esIngreso = t.tipo === 'ingreso';
+                const icono = iconos[t.categoria] || "fa-tag";
+                return `
+                    <div class="glass rounded-xl p-3 flex justify-between items-center mb-2">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center ${esIngreso ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}">
+                                <i class="fas ${icono}"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-sm">${t.categoria}</p>
+                                <p class="text-xs text-gray-500">${t.fecha} ${t.descripcion ? '• '+t.descripcion : ''}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold ${esIngreso ? 'text-emerald-500' : 'text-gray-800 dark:text-gray-200'}">${esIngreso ? '+' : '-'}${formatMoney(t.monto)}</p>
+                            <button onclick="borrarTransaccion(${t.id})" class="text-xs text-red-400 hover:text-red-600 mt-1"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function borrarTransaccion(id) {
+            Swal.fire({
+                title: '¿Borrar movimiento?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Sí, borrar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    data.transacciones = data.transacciones.filter(t => t.id !== id);
+                    saveData();
+                    Swal.fire('Borrado', '', 'success');
+                }
+            });
+        }
+
+        // --- GRÁFICO ---
+        function renderChart() {
             const cats = {};
             data.transacciones.forEach(t => {
                 if (t.tipo === 'gasto' && t.fecha.startsWith(mesActual())) {
@@ -313,14 +343,19 @@
                 }
             });
 
-            const ctx = document.getElementById('graficoGastos').getContext('2d');
+            const ctx = document.getElementById('chartGastos').getContext('2d');
             if (chartInstance) chartInstance.destroy();
-
+            
+            const noData = document.getElementById('noDataChart');
             if (Object.keys(cats).length === 0) {
-                document.getElementById('graficoGastos').style.display = 'none';
+                noData.classList.remove('hidden');
+                document.getElementById('chartGastos').style.display = 'none';
                 return;
             }
-            document.getElementById('graficoGastos').style.display = 'block';
+            noData.classList.add('hidden');
+            document.getElementById('chartGastos').style.display = 'block';
+
+            const isDark = document.documentElement.classList.contains('dark');
 
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
@@ -328,160 +363,265 @@
                     labels: Object.keys(cats),
                     datasets: [{
                         data: Object.values(cats),
-                        backgroundColor: ['#4f46e5', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#64748b'],
-                        borderWidth: 0
+                        backgroundColor: ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#64748b'],
+                        borderWidth: 0,
+                        hoverOffset: 4
                     }]
                 },
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {size: 10} } } } 
+                    responsive: true, maintainAspectRatio: false, cutout: '75%',
+                    plugins: { 
+                        legend: { position: 'right', labels: { color: isDark ? '#cbd5e1' : '#475569', boxWidth: 10, font: {size: 11, family: 'Inter'} } } 
+                    } 
                 }
             });
         }
 
-        // FORMULARIOS
-        function setTipo(tipo) {
-            tipoActual = tipo;
-            document.getElementById('tipoTransaccion').value = tipo;
-            
-            const btnGasto = document.getElementById('btnTipoGasto');
-            const btnIngreso = document.getElementById('btnTipoIngreso');
+        // --- MODALES (SweetAlert2) ---
+        const htmlTransaccion = `
+            <div class="flex flex-col gap-3 text-left">
+                <div class="flex gap-2">
+                    <button id="btnSwalGasto" onclick="setSwalTipo('gasto')" class="flex-1 py-2 rounded-lg font-bold text-white bg-rose-500">Gasto</button>
+                    <button id="btnSwalIngreso" onclick="setSwalTipo('ingreso')" class="flex-1 py-2 rounded-lg font-bold bg-gray-200 text-gray-600">Ingreso</button>
+                </div>
+                <input id="swalMonto" type="number" class="swal2-input !m-0 !w-full" placeholder="Monto $" required>
+                <select id="swalCat" class="swal2-select !m-0 !w-full !max-w-full"></select>
+                <input id="swalDesc" type="text" class="swal2-input !m-0 !w-full" placeholder="Descripción (Opcional)">
+            </div>
+        `;
+
+        let swalTipo = 'gasto';
+        const CAT_GASTO = ["Alimentación", "Transporte", "Vivienda", "Servicios", "Salud", "Entretenimiento", "Educación", "Ropa", "Restaurantes", "Suscripciones", "Ahorro", "Otros"];
+        const CAT_INGRESO = ["Salario", "Freelance", "Inversiones", "Regalo", "Otros"];
+
+        function setSwalTipo(tipo) {
+            swalTipo = tipo;
+            const btnG = document.getElementById('btnSwalGasto');
+            const btnI = document.getElementById('btnSwalIngreso');
+            const select = document.getElementById('swalCat');
             
             if (tipo === 'gasto') {
-                btnGasto.className = "flex-1 py-2 rounded-md font-semibold text-white bg-red-500 transition";
-                btnIngreso.className = "flex-1 py-2 rounded-md font-semibold text-gray-600 transition";
+                btnG.className = 'flex-1 py-2 rounded-lg font-bold text-white bg-rose-500';
+                btnI.className = 'flex-1 py-2 rounded-lg font-bold bg-gray-200 text-gray-600';
+                select.innerHTML = CAT_GASTO.map(c => `<option value="${c}">${c}</option>`).join('');
             } else {
-                btnGasto.className = "flex-1 py-2 rounded-md font-semibold text-gray-600 transition";
-                btnIngreso.className = "flex-1 py-2 rounded-md font-semibold text-white bg-green-500 transition";
+                btnG.className = 'flex-1 py-2 rounded-lg font-bold bg-gray-200 text-gray-600';
+                btnI.className = 'flex-1 py-2 rounded-lg font-bold text-white bg-emerald-500';
+                select.innerHTML = CAT_INGRESO.map(c => `<option value="${c}">${c}</option>`).join('');
             }
-            actualizarCategorias();
         }
 
-        function actualizarCategorias() {
-            const select = document.getElementById('categoriaTransaccion');
-            const lista = tipoActual === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_GASTO;
-            select.innerHTML = lista.map(c => `<option value="${c}">${c}</option>`).join('');
-        }
-
-        function guardarTransaccion(e) {
-            e.preventDefault();
-            data.transacciones.push({
-                id: data.nextId++,
-                tipo: tipoActual,
-                monto: parseFloat(document.getElementById('montoTransaccion').value),
-                categoria: document.getElementById('categoriaTransaccion').value,
-                descripcion: document.getElementById('descTransaccion').value,
-                fecha: hoy()
+        function abrirModalTransaccion() {
+            Swal.fire({
+                title: 'Nuevo Movimiento',
+                html: htmlTransaccion,
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#6366f1',
+                didOpen: () => { setSwalTipo('gasto'); },
+                preConfirm: () => {
+                    const monto = document.getElementById('swalMonto').value;
+                    if (!monto || monto <= 0) { Swal.showValidationMessage('Ingresa un monto válido'); return false; }
+                    return {
+                        monto: parseFloat(monto),
+                        categoria: document.getElementById('swalCat').value,
+                        descripcion: document.getElementById('swalDesc').value,
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    data.transacciones.push({
+                        id: data.nextId++, tipo: swalTipo, monto: result.value.monto,
+                        categoria: result.value.categoria, descripcion: result.value.descripcion, fecha: hoy()
+                    });
+                    saveData();
+                    Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, icon: 'success', title: 'Guardado' });
+                }
             });
-            saveData();
-            e.target.reset();
-            alert('✅ Guardado con éxito');
-            showSection('dashboard', document.querySelector('.nav-item')); // Volver al inicio
         }
 
-        function guardarPrestamo(e) {
-            e.preventDefault();
-            data.prestamos.push({
-                id: data.nextIdPrestamo++,
-                tipo: document.getElementById('tipoPrestamo').value,
-                persona: document.getElementById('personaPrestamo').value,
-                monto: parseFloat(document.getElementById('montoPrestamo').value),
-                pagado: 0
+        function abrirModalMeta() {
+            Swal.fire({
+                title: 'Nueva Meta',
+                html: `
+                    <input id="swalNombre" class="swal2-input" placeholder="Ej: Viaje a la playa">
+                    <input id="swalObjetivo" type="number" class="swal2-input" placeholder="Monto objetivo $">
+                `,
+                showCancelButton: true, confirmButtonText: 'Crear', confirmButtonColor: '#6366f1',
+                preConfirm: () => {
+                    const n = document.getElementById('swalNombre').value;
+                    const o = document.getElementById('swalObjetivo').value;
+                    if (!n || !o || o <= 0) { Swal.showValidationMessage('Llena todos los campos'); return false; }
+                    return { nombre: n, objetivo: parseFloat(o) };
+                }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    data.metas.push({ nombre: res.value.nombre, objetivo: res.value.objetivo, ahorrado: 0 });
+                    saveData();
+                }
             });
-            saveData();
-            e.target.reset();
-            document.getElementById('formPrestamoContainer').classList.add('hidden');
-            alert('✅ Préstamo guardado');
+        }
+
+        function abonarMeta(i) {
+            const m = data.metas[i];
+            Swal.fire({
+                title: `Abonar a "${m.nombre}"`,
+                text: `Faltan: ${formatMoney(m.objetivo - m.ahorrado)}`,
+                input: 'number',
+                inputAttributes: { min: 1 },
+                showCancelButton: true, confirmButtonText: 'Abonar', confirmButtonColor: '#10b981',
+                preConfirm: (val) => { if(!val || val <= 0) { Swal.showValidationMessage('Monto inválido'); return false; } return val; }
+            }).then(res => {
+                if(res.isConfirmed) {
+                    m.ahorrado += parseFloat(res.value);
+                    if(m.ahorrado > m.objetivo) m.ahorrado = m.objetivo;
+                    saveData();
+                }
+            });
+        }
+
+        function renderMetas() {
+            const cont = document.getElementById('listaMetas');
+            if (data.metas.length === 0) { cont.innerHTML = '<p class="text-xs text-gray-500 mb-4">No hay metas creadas.</p>'; return; }
+            cont.innerHTML = data.metas.map((m, i) => {
+                const pct = Math.round((m.ahorrado / m.objetivo) * 100);
+                return `
+                    <div class="glass rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="font-bold text-sm">${m.nombre}</p>
+                            <span class="text-xs font-bold text-brand">${pct}%</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-3">${formatMoney(m.ahorrado)} de ${formatMoney(m.objetivo)}</p>
+                        <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5 mb-3">
+                            <div class="bg-brand h-1.5 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                        <button onclick="abonarMeta(${i})" class="w-full py-1.5 text-xs font-bold text-brand bg-brand/10 rounded-lg">+ Abonar</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function abrirModalPrestamo() {
+            Swal.fire({
+                title: 'Nuevo Préstamo',
+                html: `
+                    <select id="swalTipoP" class="swal2-select !w-full !max-w-full">
+                        <option value="prestado">💚 Me deben (Yo presté)</option>
+                        <option value="debo">❤️ Yo debo (Me prestaron)</option>
+                    </select>
+                    <input id="swalPersona" class="swal2-input" placeholder="Nombre de la persona">
+                    <input id="swalMontoP" type="number" class="swal2-input" placeholder="Monto $">
+                `,
+                showCancelButton: true, confirmButtonText: 'Guardar', confirmButtonColor: '#6366f1',
+                preConfirm: () => {
+                    const per = document.getElementById('swalPersona').value;
+                    const mon = document.getElementById('swalMontoP').value;
+                    if (!per || !mon || mon <= 0) { Swal.showValidationMessage('Llena todos los campos'); return false; }
+                    return { tipo: document.getElementById('swalTipoP').value, persona: per, monto: parseFloat(mon) };
+                }
+            }).then(res => {
+                if(res.isConfirmed) {
+                    data.prestamos.push({ id: data.nextIdPrestamo++, tipo: res.value.tipo, persona: res.value.persona, monto: res.value.monto, pagado: 0 });
+                    saveData();
+                }
+            });
         }
 
         function pagarPrestamo(id) {
             const p = data.prestamos.find(x => x.id === id);
-            const abono = parseFloat(prompt(`¿Cuánto abonas a ${p.persona}?\n(Pendiente: ${formatMoney(p.monto - p.pagado)})`));
-            if (abono && abono > 0) {
-                p.pagado += abono;
-                if (p.pagado > p.monto) p.pagado = p.monto;
-                saveData();
-            }
+            Swal.fire({
+                title: `Abono a ${p.persona}`,
+                text: `Pendiente: ${formatMoney(p.monto - p.pagado)}`,
+                input: 'number',
+                showCancelButton: true, confirmButtonText: 'Abonar', confirmButtonColor: '#6366f1',
+                preConfirm: (val) => { if(!val || val <= 0) { Swal.showValidationMessage('Monto inválido'); return false; } return val; }
+            }).then(res => {
+                if(res.isConfirmed) {
+                    p.pagado += parseFloat(res.value);
+                    if(p.pagado > p.monto) p.pagado = p.monto;
+                    saveData();
+                }
+            });
         }
 
         function renderPrestamos() {
-            const contenedor = document.getElementById('listaPrestamos');
-            if (data.prestamos.length === 0) {
-                contenedor.innerHTML = '<p class="text-gray-500 text-sm text-center">No hay préstamos activos.</p>';
-                return;
-            }
-            contenedor.innerHTML = data.prestamos.map(p => {
-                const pendiente = p.monto - p.pagado;
-                const pct = (p.pagado / p.monto) * 100;
+            const cont = document.getElementById('listaPrestamos');
+            if (data.prestamos.length === 0) { cont.innerHTML = '<p class="text-xs text-gray-500">No hay préstamos activos.</p>'; return; }
+            cont.innerHTML = data.prestamos.map(p => {
+                const pend = p.monto - p.pagado;
                 return `
-                    <div class="card p-3 mb-2">
-                        <div class="flex justify-between items-center mb-2">
-                            <div>
-                                <p class="font-bold text-gray-800 text-sm">${p.persona}</p>
-                                <p class="text-xs text-gray-500">${p.tipo === 'prestado' ? '💚 Te debe' : '❤️ Le debes'}</p>
-                            </div>
-                            <span class="font-bold ${p.tipo === 'prestado' ? 'text-green-600' : 'text-red-600'}">${formatMoney(pendiente)}</span>
+                    <div class="glass rounded-xl p-4 flex justify-between items-center ${pend === 0 ? 'opacity-50' : ''}">
+                        <div>
+                            <p class="font-bold text-sm">${p.persona}</p>
+                            <p class="text-xs font-semibold ${p.tipo === 'prestado' ? 'text-emerald-500' : 'text-rose-500'}">${p.tipo === 'prestado' ? 'Te debe' : 'Le debes'}</p>
                         </div>
-                        <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
-                            <div class="bg-indigo-600 h-1.5 rounded-full" style="width: ${pct}%"></div>
+                        <div class="text-right">
+                            <p class="font-bold">${formatMoney(pend)}</p>
+                            ${pend > 0 ? `<button onclick="pagarPrestamo(${p.id})" class="text-[10px] bg-brand text-white px-2 py-1 rounded mt-1">Abonar</button>` : ''}
                         </div>
-                        ${pendiente > 0 ? `<button onclick="pagarPrestamo(${p.id})" class="w-full text-xs bg-gray-100 text-gray-700 py-1.5 rounded font-semibold">Abonar</button>` : '<span class="text-xs text-green-600 font-bold block text-center">✅ Pagado</span>'}
                     </div>
                 `;
             }).join('');
         }
 
-        function guardarMeta(e) {
-            e.preventDefault();
-            data.metas.push({
-                nombre: document.getElementById('nombreMeta').value,
-                objetivo: parseFloat(document.getElementById('objetivoMeta').value),
-                ahorrado: 0
-            });
+        // --- AJUSTES Y DATOS ---
+        function guardarAjustes() {
+            data.ahorroPct = parseInt(document.getElementById('inputAhorroPct').value);
             saveData();
-            e.target.reset();
-            document.getElementById('formMetaContainer').classList.add('hidden');
-            alert('✅ Meta creada');
+            Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, icon: 'success', title: 'Ajustes guardados' });
         }
 
-        function abonarMeta(index) {
-            const m = data.metas[index];
-            const abono = parseFloat(prompt(`¿Cuánto abonas a "${m.nombre}"?\n(Faltan: ${formatMoney(m.objetivo - m.ahorrado)})`));
-            if (abono && abono > 0) {
-                m.ahorrado += abono;
-                if (m.ahorrado > m.objetivo) m.ahorrado = m.objetivo;
-                saveData();
-            }
+        function exportarDatos() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `finzen_backup_${hoy()}.json`);
+            dlAnchorElem.click();
         }
 
-        function renderMetas() {
-            const contenedor = document.getElementById('listaMetas');
-            if (data.metas.length === 0) {
-                contenedor.innerHTML = '<p class="text-gray-500 text-sm text-center">No hay metas creadas.</p>';
-                return;
-            }
-            contenedor.innerHTML = data.metas.map((m, i) => {
-                const pct = (m.ahorrado / m.objetivo) * 100;
-                return `
-                    <div class="card p-3 mb-2">
-                        <div class="flex justify-between items-center mb-2">
-                            <p class="font-bold text-gray-800 text-sm">${m.nombre}</p>
-                            <span class="text-xs font-semibold text-gray-500">${Math.round(pct)}%</span>
-                        </div>
-                        <p class="text-xs text-gray-500 mb-2">${formatMoney(m.ahorrado)} / ${formatMoney(m.objetivo)}</p>
-                        <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
-                            <div class="bg-green-500 h-2 rounded-full" style="width: ${pct}%"></div>
-                        </div>
-                        ${pct < 100 ? `<button onclick="abonarMeta(${i})" class="w-full text-xs bg-gray-100 text-gray-700 py-1.5 rounded font-semibold">Abonar a meta</button>` : '<span class="text-xs text-green-600 font-bold block text-center">🎉 ¡Completada!</span>'}
-                    </div>
-                `;
-            }).join('');
+        function importarDatos() {
+            Swal.fire({
+                title: 'Importar Backup',
+                text: 'Pega el contenido de tu archivo JSON aquí:',
+                input: 'textarea',
+                showCancelButton: true,
+                confirmButtonText: 'Importar',
+                preConfirm: (jsonStr) => {
+                    try {
+                        const parsed = JSON.parse(jsonStr);
+                        if (!parsed.transacciones) throw new Error("Formato inválido");
+                        return parsed;
+                    } catch (e) {
+                        Swal.showValidationMessage('JSON inválido. Verifica el archivo.');
+                    }
+                }
+            }).then(res => {
+                if(res.isConfirmed) {
+                    data = res.value;
+                    saveData();
+                    Swal.fire('Importado', 'Datos restaurados con éxito', 'success');
+                }
+            });
+        }
+
+        function borrarTodo() {
+            Swal.fire({
+                title: '¿Borrar todo?',
+                text: "Se perderán todas tus transacciones y metas permanentemente.",
+                icon: 'warning', showCancelButton: true,
+                confirmButtonColor: '#ef4444', confirmButtonText: 'Sí, borrar todo'
+            }).then(res => {
+                if(res.isConfirmed) {
+                    localStorage.removeItem('finzenDataPro');
+                    location.reload();
+                }
+            });
         }
 
         // Iniciar
         renderApp();
-        setTipo('gasto');
+        setSwalTipo('gasto');
     </script>
 </body>
 </html>
