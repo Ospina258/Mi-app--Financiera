@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4f46e5">
+    <title>💰 Finzen</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Evitar el rebote de la pantalla en iOS y hacerlo sentir nativo */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
+            padding-bottom: 80px; /* Espacio para la barra de navegación */
+        }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75rem; color: #6b7280; transition: 0.2s; }
+        .nav-item.active { color: #4f46e5; }
+        .nav-item i { font-size: 1.25rem; margin-bottom: 4px; }
+        .hidden-section { display: none; }
+        .card { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 12px; }
+        input, select { font-size: 16px !important; /* Evita el zoom automático en iOS al tocar inputs */ }
+    </style>
+</head>
+<body>
+
+    <!-- ENCABEZADO -->
+    <header class="bg-indigo-600 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-md">
+        <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Finzen</h1>
+        <span class="text-xs bg-indigo-700 px-2 py-1 rounded-full" id="mesActualTexto">Mes</span>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="p-4 max-w-md mx-auto">
+        
+        <!-- SECCIÓN: DASHBOARD -->
+        <section id="dashboard" class="block">
+            <div class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-5 rounded-2xl mb-4 shadow-lg">
+                <p class="text-sm opacity-90">Límite de gasto para HOY</p>
+                <h1 class="text-4xl font-extrabold mt-1" id="limiteDiario">$0</h1>
+                <p id="estadoLimite" class="mt-2 text-sm font-medium">Cargando...</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="card mb-0">
+                    <p class="text-gray-500 text-xs font-semibold uppercase">Ingresos (Mes)</p>
+                    <h3 class="text-xl font-bold text-green-500" id="totalIngresos">$0</h3>
+                </div>
+                <div class="card mb-0">
+                    <p class="text-gray-500 text-xs font-semibold uppercase">Gastos (Mes)</p>
+                    <h3 class="text-xl font-bold text-red-500" id="totalGastos">$0</h3>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="font-bold text-gray-700 mb-2 text-sm">Gastos por Categoría</h3>
+                <div class="relative h-48 w-full flex justify-center">
+                    <canvas id="graficoGastos"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="card mb-0 border-l-4 border-green-500">
+                    <p class="text-gray-500 text-xs font-semibold">💚 Me deben</p>
+                    <p class="text-lg font-bold text-gray-800" id="meDeben">$0</p>
+                </div>
+                <div class="card mb-0 border-l-4 border-red-500">
+                    <p class="text-gray-500 text-xs font-semibold">❤️ Yo debo</p>
+                    <p class="text-lg font-bold text-gray-800" id="yoDebo">$0</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: REGISTRAR -->
+        <section id="registrar" class="hidden-section">
+            <h2 class="text-xl font-bold mb-3 text-gray-800">💸 Registrar</h2>
+            
+            <!-- Botones tipo Toggle -->
+            <div class="flex bg-gray-200 rounded-lg p-1 mb-4">
+                <button onclick="setTipo('gasto')" id="btnTipoGasto" class="flex-1 py-2 rounded-md font-semibold text-white bg-red-500 transition">Gasto</button>
+                <button onclick="setTipo('ingreso')" id="btnTipoIngreso" class="flex-1 py-2 rounded-md font-semibold text-gray-600 transition">Ingreso</button>
+            </div>
+
+            <div class="card">
+                <form id="formTransaccion" onsubmit="guardarTransaccion(event)">
+                    <input type="hidden" id="tipoTransaccion" value="gasto">
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Monto ($)</label>
+                        <input type="number" id="montoTransaccion" step="0.01" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0.00" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Categoría</label>
+                        <select id="categoriaTransaccion" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"></select>
+                    </div>
+                    <div class="mb-5">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Descripción (Opcional)</label>
+                        <input type="text" id="descTransaccion" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ej: Almuerzo">
+                    </div>
+                    <button type="submit" class="bg-indigo-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-indigo-700 w-full shadow-md transition">Guardar Movimiento</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: PRESUPUESTO -->
+        <section id="presupuesto" class="hidden-section">
+            <h2 class="text-xl font-bold mb-3 text-gray-800">🎯 Presupuesto</h2>
+            <div class="card">
+                <h3 class="font-bold text-gray-700 mb-3 text-sm border-b pb-2">Desglose del mes</h3>
+                <ul class="space-y-3 text-sm">
+                    <li class="flex justify-between items-center"><span>Ingreso total</span> <b id="desgloseIngreso" class="text-green-600 text-base">$0</b></li>
+                    <li class="flex justify-between items-center"><span>Gastos realizados</span> <b id="desgloseGasto" class="text-red-600 text-base">$0</b></li>
+                    <li class="flex justify-between items-center"><span>Ahorro sugerido (10%)</span> <b id="desgloseAhorro" class="text-blue-600 text-base">$0</b></li>
+                    <li class="flex justify-between items-center"><span>Deudas pendientes</span> <b id="desgloseDeudas" class="text-orange-500 text-base">$0</b></li>
+                </ul>
+                <div class="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center">
+                    <span class="font-bold text-gray-800">Disponible libre</span> 
+                    <b id="desgloseDisponible" class="text-indigo-600 text-xl">$0</b>
+                </div>
+            </div>
+            
+            <div class="bg-green-50 p-4 rounded-xl border border-green-200 text-center">
+                <p class="text-green-800 text-sm font-bold mb-1">💡 Límite diario sugerido</p>
+                <p class="text-3xl font-extrabold text-green-600" id="limiteDiarioDesglose">$0</p>
+                <p class="text-xs text-green-700 mt-1" id="diasRestantesTexto">Quedan 0 días</p>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: PRÉSTAMOS -->
+        <section id="prestamos" class="hidden-section">
+            <h2 class="text-xl font-bold mb-3 text-gray-800">🤝 Préstamos</h2>
+            
+            <!-- Botón para abrir formulario -->
+            <button onclick="document.getElementById('formPrestamoContainer').classList.toggle('hidden')" class="w-full bg-white border border-indigo-200 text-indigo-600 py-3 rounded-xl font-bold mb-3 shadow-sm">+ Nuevo Préstamo</button>
+
+            <div id="formPrestamoContainer" class="hidden card bg-indigo-50 border border-indigo-100 mb-4">
+                <form id="formPrestamo" onsubmit="guardarPrestamo(event)">
+                    <div class="mb-3">
+                        <select id="tipoPrestamo" class="w-full p-3 bg-white border border-gray-300 rounded-lg text-sm">
+                            <option value="prestado">💚 Me deben (Yo presté)</option>
+                            <option value="debo">❤️ Yo debo (Me prestaron)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" id="personaPrestamo" class="w-full p-3 bg-white border border-gray-300 rounded-lg text-sm" placeholder="Nombre de la persona" required>
+                    </div>
+                    <div class="mb-3">
+                        <input type="number" id="montoPrestamo" min="1" class="w-full p-3 bg-white border border-gray-300 rounded-lg text-sm" placeholder="Monto $" required>
+                    </div>
+                    <button type="submit" class="bg-indigo-600 text-white py-2 rounded-lg w-full text-sm font-bold">Guardar</button>
+                </form>
+            </div>
+
+            <div id="listaPrestamos" class="space-y-3">
+                <!-- Se llena con JS -->
+            </div>
+        </section>
+
+        <!-- SECCIÓN: METAS -->
+        <section id="metas" class="hidden-section">
+            <h2 class="text-xl font-bold mb-3 text-gray-800">🏦 Metas</h2>
+            
+            <button onclick="document.getElementById('formMetaContainer').classList.toggle('hidden')" class="w-full bg-white border border-green-200 text-green-600 py-3 rounded-xl font-bold mb-3 shadow-sm">+ Nueva Meta</button>
+
+            <div id="formMetaContainer" class="hidden card bg-green-50 border border-green-100 mb-4">
+                <form id="formMeta" onsubmit="guardarMeta(event)">
+                    <div class="mb-3">
+                        <input type="text" id="nombreMeta" class="w-full p-3 bg-white border border-gray-300 rounded-lg text-sm" placeholder="Ej: Fondo de emergencia" required>
+                    </div>
+                    <div class="mb-3">
+                        <input type="number" id="objetivoMeta" min="1" class="w-full p-3 bg-white border border-gray-300 rounded-lg text-sm" placeholder="Objetivo $" required>
+                    </div>
+                    <button type="submit" class="bg-green-600 text-white py-2 rounded-lg w-full text-sm font-bold">Crear Meta</button>
+                </form>
+            </div>
+
+            <div id="listaMetas" class="space-y-3">
+                <!-- Se llena con JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BARRA DE NAVEGACIÓN INFERIOR (ESTILO APP) -->
+    <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around pb-safe pt-2 pb-2 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+        <div class="nav-item active" onclick="showSection('dashboard', this)">
+            <i class="fas fa-home"></i><span>Inicio</span>
+        </div>
+        <div class="nav-item" onclick="showSection('registrar', this)">
+            <i class="fas fa-plus-circle"></i><span>Registrar</span>
+        </div>
+        <div class="nav-item" onclick="showSection('presupuesto', this)">
+            <i class="fas fa-chart-pie"></i><span>Límite</span>
+        </div>
+        <div class="nav-item" onclick="showSection('prestamos', this)">
+            <i class="fas fa-handshake"></i><span>Préstamos</span>
+        </div>
+        <div class="nav-item" onclick="showSection('metas', this)">
+            <i class="fas fa-bullseye"></i><span>Metas</span>
+        </div>
+    </nav>
+
+    <!-- LÓGICA JAVASCRIPT -->
+    <script>
+        let data = JSON.parse(localStorage.getItem('finzenDataMobile')) || {
+            transacciones: [], metas: [], prestamos: [], nextId: 1, nextIdPrestamo: 1
+        };
+
+        const CATEGORIAS_GASTO = ["Alimentación", "Transporte", "Vivienda", "Servicios", "Salud", "Entretenimiento", "Educación", "Ropa", "Restaurantes", "Suscripciones", "Ahorro", "Otros"];
+        const CATEGORIAS_INGRESO = ["Salario", "Freelance", "Inversiones", "Regalo", "Otros"];
+        let chartInstance = null;
+        let tipoActual = 'gasto';
+
+        function saveData() {
+            localStorage.setItem('finzenDataMobile', JSON.stringify(data));
+            renderApp();
+        }
+
+        const formatMoney = (num) => '$' + Math.round(num).toLocaleString('es-CO');
+        const mesActual = () => new Date().toISOString().slice(0, 7);
+        const hoy = () => new Date().toISOString().split('T')[0];
+
+        function diasRestantesMes() {
+            const d = new Date();
+            return Math.max(new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate() - d.getDate(), 1);
+        }
+
+        // NAVEGACIÓN
+        function showSection(id, element) {
+            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden-section'));
+            document.getElementById(id).classList.remove('hidden-section');
+            
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            element.classList.add('active');
+            window.scrollTo(0,0); // Subir al inicio al cambiar de pestaña
+            renderApp();
+        }
+
+        // LÓGICA
+        function calcularDatos() {
+            const mes = mesActual();
+            let ing = 0, gas = 0, gasHoy = 0;
+            
+            data.transacciones.forEach(t => {
+                if (t.fecha.startsWith(mes)) {
+                    if (t.tipo === 'ingreso') ing += t.monto;
+                    else {
+                        gas += t.monto;
+                        if (t.fecha === hoy()) gasHoy += t.monto;
+                    }
+                }
+            });
+
+            const ahorro = ing * 0.10;
+            const deudas = data.prestamos.filter(p => p.tipo === 'debo').reduce((acc, p) => acc + (p.monto - p.pagado), 0);
+            const disponible = ing - gas - ahorro - deudas;
+            const dias = diasRestantesMes();
+            const limiteDiario = Math.max(disponible / dias, 0);
+
+            return { ing, gas, gasHoy, ahorro, deudas, disponible, limiteDiario, dias };
+        }
+
+        // RENDERIZADO
+        function renderApp() {
+            const info = calcularDatos();
+            
+            // Setear mes en el header
+            const opciones = { month: 'short', year: 'numeric' };
+            document.getElementById('mesActualTexto').innerText = new Date().toLocaleDateString('es', opciones).toUpperCase();
+
+            // Dashboard
+            document.getElementById('limiteDiario').innerText = formatMoney(info.limiteDiario);
+            document.getElementById('totalIngresos').innerText = formatMoney(info.ing);
+            document.getElementById('totalGastos').innerText = formatMoney(info.gas);
+
+            const estado = document.getElementById('estadoLimite');
+            if (info.gasHoy >= info.limiteDiario && info.limiteDiario > 0) {
+                estado.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Superaste el límite (Hoy: ${formatMoney(info.gasHoy)})`;
+                estado.className = "mt-2 text-sm text-red-100 font-bold bg-red-500/50 inline-block px-2 py-1 rounded";
+            } else {
+                estado.innerHTML = `<i class="fas fa-check-circle"></i> Puedes gastar ${formatMoney(info.limiteDiario - info.gasHoy)} más hoy`;
+                estado.className = "mt-2 text-sm text-green-100 font-bold bg-green-500/50 inline-block px-2 py-1 rounded";
+            }
+
+            // Préstamos Dashboard
+            document.getElementById('meDeben').innerText = formatMoney(data.prestamos.filter(p => p.tipo === 'prestado').reduce((acc, p) => acc + (p.monto - p.pagado), 0));
+            document.getElementById('yoDebo').innerText = formatMoney(data.prestamos.filter(p => p.tipo === 'debo').reduce((acc, p) => acc + (p.monto - p.pagado), 0));
+
+            // Presupuesto
+            document.getElementById('desgloseIngreso').innerText = formatMoney(info.ing);
+            document.getElementById('desgloseGasto').innerText = formatMoney(info.gas);
+            document.getElementById('desgloseAhorro').innerText = formatMoney(info.ahorro);
+            document.getElementById('desgloseDeudas').innerText = formatMoney(info.deudas);
+            document.getElementById('desgloseDisponible').innerText = formatMoney(info.disponible);
+            document.getElementById('limiteDiarioDesglose').innerText = formatMoney(info.limiteDiario);
+            document.getElementById('diasRestantesTexto').innerText = `Quedan ${info.dias} días de mes`;
+
+            renderGrafico();
+            renderPrestamos();
+            renderMetas();
+        }
+
+        function renderGrafico() {
+            const cats = {};
+            data.transacciones.forEach(t => {
+                if (t.tipo === 'gasto' && t.fecha.startsWith(mesActual())) {
+                    cats[t.categoria] = (cats[t.categoria] || 0) + t.monto;
+                }
+            });
+
+            const ctx = document.getElementById('graficoGastos').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            if (Object.keys(cats).length === 0) {
+                document.getElementById('graficoGastos').style.display = 'none';
+                return;
+            }
+            document.getElementById('graficoGastos').style.display = 'block';
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(cats),
+                    datasets: [{
+                        data: Object.values(cats),
+                        backgroundColor: ['#4f46e5', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#64748b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {size: 10} } } } 
+                }
+            });
+        }
+
+        // FORMULARIOS
+        function setTipo(tipo) {
+            tipoActual = tipo;
+            document.getElementById('tipoTransaccion').value = tipo;
+            
+            const btnGasto = document.getElementById('btnTipoGasto');
+            const btnIngreso = document.getElementById('btnTipoIngreso');
+            
+            if (tipo === 'gasto') {
+                btnGasto.className = "flex-1 py-2 rounded-md font-semibold text-white bg-red-500 transition";
+                btnIngreso.className = "flex-1 py-2 rounded-md font-semibold text-gray-600 transition";
+            } else {
+                btnGasto.className = "flex-1 py-2 rounded-md font-semibold text-gray-600 transition";
+                btnIngreso.className = "flex-1 py-2 rounded-md font-semibold text-white bg-green-500 transition";
+            }
+            actualizarCategorias();
+        }
+
+        function actualizarCategorias() {
+            const select = document.getElementById('categoriaTransaccion');
+            const lista = tipoActual === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_GASTO;
+            select.innerHTML = lista.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function guardarTransaccion(e) {
+            e.preventDefault();
+            data.transacciones.push({
+                id: data.nextId++,
+                tipo: tipoActual,
+                monto: parseFloat(document.getElementById('montoTransaccion').value),
+                categoria: document.getElementById('categoriaTransaccion').value,
+                descripcion: document.getElementById('descTransaccion').value,
+                fecha: hoy()
+            });
+            saveData();
+            e.target.reset();
+            alert('✅ Guardado con éxito');
+            showSection('dashboard', document.querySelector('.nav-item')); // Volver al inicio
+        }
+
+        function guardarPrestamo(e) {
+            e.preventDefault();
+            data.prestamos.push({
+                id: data.nextIdPrestamo++,
+                tipo: document.getElementById('tipoPrestamo').value,
+                persona: document.getElementById('personaPrestamo').value,
+                monto: parseFloat(document.getElementById('montoPrestamo').value),
+                pagado: 0
+            });
+            saveData();
+            e.target.reset();
+            document.getElementById('formPrestamoContainer').classList.add('hidden');
+            alert('✅ Préstamo guardado');
+        }
+
+        function pagarPrestamo(id) {
+            const p = data.prestamos.find(x => x.id === id);
+            const abono = parseFloat(prompt(`¿Cuánto abonas a ${p.persona}?\n(Pendiente: ${formatMoney(p.monto - p.pagado)})`));
+            if (abono && abono > 0) {
+                p.pagado += abono;
+                if (p.pagado > p.monto) p.pagado = p.monto;
+                saveData();
+            }
+        }
+
+        function renderPrestamos() {
+            const contenedor = document.getElementById('listaPrestamos');
+            if (data.prestamos.length === 0) {
+                contenedor.innerHTML = '<p class="text-gray-500 text-sm text-center">No hay préstamos activos.</p>';
+                return;
+            }
+            contenedor.innerHTML = data.prestamos.map(p => {
+                const pendiente = p.monto - p.pagado;
+                const pct = (p.pagado / p.monto) * 100;
+                return `
+                    <div class="card p-3 mb-2">
+                        <div class="flex justify-between items-center mb-2">
+                            <div>
+                                <p class="font-bold text-gray-800 text-sm">${p.persona}</p>
+                                <p class="text-xs text-gray-500">${p.tipo === 'prestado' ? '💚 Te debe' : '❤️ Le debes'}</p>
+                            </div>
+                            <span class="font-bold ${p.tipo === 'prestado' ? 'text-green-600' : 'text-red-600'}">${formatMoney(pendiente)}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+                            <div class="bg-indigo-600 h-1.5 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                        ${pendiente > 0 ? `<button onclick="pagarPrestamo(${p.id})" class="w-full text-xs bg-gray-100 text-gray-700 py-1.5 rounded font-semibold">Abonar</button>` : '<span class="text-xs text-green-600 font-bold block text-center">✅ Pagado</span>'}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function guardarMeta(e) {
+            e.preventDefault();
+            data.metas.push({
+                nombre: document.getElementById('nombreMeta').value,
+                objetivo: parseFloat(document.getElementById('objetivoMeta').value),
+                ahorrado: 0
+            });
+            saveData();
+            e.target.reset();
+            document.getElementById('formMetaContainer').classList.add('hidden');
+            alert('✅ Meta creada');
+        }
+
+        function abonarMeta(index) {
+            const m = data.metas[index];
+            const abono = parseFloat(prompt(`¿Cuánto abonas a "${m.nombre}"?\n(Faltan: ${formatMoney(m.objetivo - m.ahorrado)})`));
+            if (abono && abono > 0) {
+                m.ahorrado += abono;
+                if (m.ahorrado > m.objetivo) m.ahorrado = m.objetivo;
+                saveData();
+            }
+        }
+
+        function renderMetas() {
+            const contenedor = document.getElementById('listaMetas');
+            if (data.metas.length === 0) {
+                contenedor.innerHTML = '<p class="text-gray-500 text-sm text-center">No hay metas creadas.</p>';
+                return;
+            }
+            contenedor.innerHTML = data.metas.map((m, i) => {
+                const pct = (m.ahorrado / m.objetivo) * 100;
+                return `
+                    <div class="card p-3 mb-2">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="font-bold text-gray-800 text-sm">${m.nombre}</p>
+                            <span class="text-xs font-semibold text-gray-500">${Math.round(pct)}%</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">${formatMoney(m.ahorrado)} / ${formatMoney(m.objetivo)}</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                        ${pct < 100 ? `<button onclick="abonarMeta(${i})" class="w-full text-xs bg-gray-100 text-gray-700 py-1.5 rounded font-semibold">Abonar a meta</button>` : '<span class="text-xs text-green-600 font-bold block text-center">🎉 ¡Completada!</span>'}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Iniciar
+        renderApp();
+        setTipo('gasto');
+    </script>
+</body>
+</html>
