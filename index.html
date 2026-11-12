@@ -3,25 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Meta tags para evitar caché agresiva y mejorar PWA -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#6366f1">
     <title>Finzen - Gestor Financiero</title>
+    
+    <!-- Manifest para PWA -->
     <link rel="manifest" href="manifest.json">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: { brand: '#6366f1', brandDark: '#4f46e5' },
-                    fontFamily: { sans: ['Inter', 'sans-serif'] }
-                }
-            }
+        tailwind.config = { 
+            darkMode: 'class', 
+            theme: { 
+                extend: { 
+                    colors: { brand: '#6366f1', brandDark: '#4f46e5' }, 
+                    fontFamily: { sans: ['Inter', 'sans-serif'] } 
+                } 
+            } 
         }
     </script>
-    <!-- FontAwesome & SweetAlert2 & Chart.js -->
+    
+    <!-- Iconos, Alertas y Gráficos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -53,12 +62,10 @@
         </button>
     </header>
 
-    <!-- CONTENIDO PRINCIPAL -->
     <main class="px-5 max-w-lg mx-auto">
         
         <!-- SECCIÓN: INICIO (DASHBOARD) -->
         <section id="view-inicio" class="block animate-fade-in">
-            <!-- Tarjeta Principal Límite Diario -->
             <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-500/20 mb-6 relative overflow-hidden">
                 <div class="absolute -right-10 -top-10 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
                 <p class="text-indigo-100 text-sm font-medium">Límite de gasto para hoy</p>
@@ -69,7 +76,6 @@
                 <p id="lblEstadoLimite" class="text-xs text-indigo-100 font-medium">Calculando...</p>
             </div>
 
-            <!-- Resumen -->
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="glass rounded-2xl p-4 shadow-sm flex flex-col justify-between">
                     <div class="flex items-center gap-2 mb-2 text-emerald-500">
@@ -85,7 +91,6 @@
                 </div>
             </div>
 
-            <!-- Gráfico -->
             <div class="glass rounded-2xl p-4 shadow-sm mb-4">
                 <h3 class="text-sm font-bold text-gray-600 dark:text-gray-300 mb-2">Distribución de Gastos</h3>
                 <div class="h-48 relative flex justify-center">
@@ -103,9 +108,7 @@
                 <button onclick="filtrarHistorial('gasto')" class="filtro-btn px-4 py-1.5 rounded-full text-sm font-semibold glass text-gray-600 dark:text-gray-300">Gastos</button>
                 <button onclick="filtrarHistorial('ingreso')" class="filtro-btn px-4 py-1.5 rounded-full text-sm font-semibold glass text-gray-600 dark:text-gray-300">Ingresos</button>
             </div>
-            <div id="listaHistorial" class="space-y-3">
-                <!-- Se llena con JS -->
-            </div>
+            <div id="listaHistorial" class="space-y-3"></div>
         </section>
 
         <!-- SECCIÓN: METAS Y PRÉSTAMOS -->
@@ -131,6 +134,12 @@
                     <span id="lblPct" class="font-bold text-brand text-lg">10%</span>
                 </div>
                 <button onclick="guardarAjustes()" class="mt-4 w-full bg-brand text-white py-2 rounded-lg text-sm font-bold">Guardar Cambios</button>
+            </div>
+
+            <div class="glass rounded-2xl p-5 mb-4 shadow-sm border border-indigo-200 dark:border-indigo-900">
+                <h3 class="font-bold text-sm mb-1 text-brand">Actualizaciones de la App</h3>
+                <p class="text-xs text-gray-500 mb-3">El sistema de caché se actualiza solo. Si acabo de subir una mejora, presiona aquí.</p>
+                <button onclick="forzarActualizacion()" class="w-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 py-2 rounded-lg text-sm font-bold"><i class="fas fa-sync-alt mr-2"></i>Buscar Actualización</button>
             </div>
 
             <div class="glass rounded-2xl p-5 mb-4 shadow-sm">
@@ -159,7 +168,7 @@
         <div class="nav-item flex flex-col items-center justify-center w-16 cursor-pointer text-gray-500 dark:text-gray-400" onclick="cambiarVista('historial', this)">
             <i class="fas fa-list-ul text-xl mb-1"></i><span class="text-[10px] font-bold">Historial</span>
         </div>
-        <div class="w-16"></div> <!-- Espacio para el FAB -->
+        <div class="w-16"></div>
         <div class="nav-item flex flex-col items-center justify-center w-16 cursor-pointer text-gray-500 dark:text-gray-400" onclick="cambiarVista('metas', this)">
             <i class="fas fa-bullseye text-xl mb-1"></i><span class="text-[10px] font-bold">Metas</span>
         </div>
@@ -169,12 +178,45 @@
     </nav>
 
     <script>
-        // --- ESTADO GLOBAL ---
+        // VERSIÓN ACTUAL DE LA APP (Solo informativa visual)
+        const APP_VERSION = "2.2"; 
+
         let data = JSON.parse(localStorage.getItem('finzenDataPro')) || {
             transacciones: [], metas: [], prestamos: [], nextId: 1, nextIdPrestamo: 1, ahorroPct: 10
         };
         let chartInstance = null;
         let filtroActual = 'todos';
+
+        // --- REGISTRO DEL SERVICE WORKER (PWA) ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado', reg))
+                    .catch(err => console.warn('Error al registrar SW', err));
+            });
+        }
+
+        // --- ACTUALIZACIÓN MANUAL ---
+        function forzarActualizacion() {
+            Swal.fire({
+                title: 'Buscando actualización...',
+                text: 'Sincronizando con el servidor.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        registration.update();
+                    }
+                });
+            }
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
 
         // --- TEMAS ---
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -185,7 +227,7 @@
         function toggleTheme() {
             document.documentElement.classList.toggle('dark');
             localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-            if(chartInstance) renderChart(); // Redibujar gráfico con nuevos colores de texto
+            if(chartInstance) renderChart();
         }
 
         // --- UTILIDADES ---
@@ -236,11 +278,9 @@
             return { ing, gas, gasHoy, ahorro, deudas, disponible, limiteDiario, dias };
         }
 
-        // --- RENDERIZADO PRINCIPAL ---
         function renderApp() {
             const info = calcularInfo();
             
-            // Dashboard
             document.getElementById('lblLimiteDiario').innerText = formatMoney(info.limiteDiario);
             document.getElementById('resumenIngresos').innerText = formatMoney(info.ing);
             document.getElementById('resumenGastos').innerText = formatMoney(info.gas);
@@ -257,7 +297,6 @@
                 lblEstado.innerHTML = `✅ Te quedan ${formatMoney(info.limiteDiario - info.gasHoy)} para hoy`;
             }
 
-            // Ajustes
             document.getElementById('inputAhorroPct').value = data.ahorroPct;
             document.getElementById('lblPct').innerText = data.ahorroPct + '%';
 
@@ -282,7 +321,6 @@
         function renderHistorial() {
             const cont = document.getElementById('listaHistorial');
             let txs = [...data.transacciones].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
-            
             if (filtroActual !== 'todos') txs = txs.filter(t => t.tipo === filtroActual);
 
             if (txs.length === 0) {
@@ -316,20 +354,10 @@
         }
 
         function borrarTransaccion(id) {
-            Swal.fire({
-                title: '¿Borrar movimiento?',
-                text: "Esta acción no se puede deshacer",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Sí, borrar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
+            Swal.fire({ title: '¿Borrar movimiento?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#64748b', confirmButtonText: 'Sí', cancelButtonText: 'No' }).then((result) => {
                 if (result.isConfirmed) {
                     data.transacciones = data.transacciones.filter(t => t.id !== id);
                     saveData();
-                    Swal.fire('Borrado', '', 'success');
                 }
             });
         }
@@ -338,9 +366,7 @@
         function renderChart() {
             const cats = {};
             data.transacciones.forEach(t => {
-                if (t.tipo === 'gasto' && t.fecha.startsWith(mesActual())) {
-                    cats[t.categoria] = (cats[t.categoria] || 0) + t.monto;
-                }
+                if (t.tipo === 'gasto' && t.fecha.startsWith(mesActual())) cats[t.categoria] = (cats[t.categoria] || 0) + t.monto;
             });
 
             const ctx = document.getElementById('chartGastos').getContext('2d');
@@ -354,30 +380,16 @@
             }
             noData.classList.add('hidden');
             document.getElementById('chartGastos').style.display = 'block';
-
             const isDark = document.documentElement.classList.contains('dark');
 
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: Object.keys(cats),
-                    datasets: [{
-                        data: Object.values(cats),
-                        backgroundColor: ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#64748b'],
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, cutout: '75%',
-                    plugins: { 
-                        legend: { position: 'right', labels: { color: isDark ? '#cbd5e1' : '#475569', boxWidth: 10, font: {size: 11, family: 'Inter'} } } 
-                    } 
-                }
+                data: { labels: Object.keys(cats), datasets: [{ data: Object.values(cats), backgroundColor: ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#64748b'], borderWidth: 0, hoverOffset: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { color: isDark ? '#cbd5e1' : '#475569', boxWidth: 10, font: {size: 11, family: 'Inter'} } } } }
             });
         }
 
-        // --- MODALES (SweetAlert2) ---
+        // --- MODALES ---
         const htmlTransaccion = `
             <div class="flex flex-col gap-3 text-left">
                 <div class="flex gap-2">
@@ -399,7 +411,6 @@
             const btnG = document.getElementById('btnSwalGasto');
             const btnI = document.getElementById('btnSwalIngreso');
             const select = document.getElementById('swalCat');
-            
             if (tipo === 'gasto') {
                 btnG.className = 'flex-1 py-2 rounded-lg font-bold text-white bg-rose-500';
                 btnI.className = 'flex-1 py-2 rounded-lg font-bold bg-gray-200 text-gray-600';
@@ -413,28 +424,17 @@
 
         function abrirModalTransaccion() {
             Swal.fire({
-                title: 'Nuevo Movimiento',
-                html: htmlTransaccion,
-                showCancelButton: true,
-                confirmButtonText: 'Guardar',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#6366f1',
+                title: 'Nuevo Movimiento', html: htmlTransaccion,
+                showCancelButton: true, confirmButtonText: 'Guardar', cancelButtonText: 'Cancelar', confirmButtonColor: '#6366f1',
                 didOpen: () => { setSwalTipo('gasto'); },
                 preConfirm: () => {
                     const monto = document.getElementById('swalMonto').value;
                     if (!monto || monto <= 0) { Swal.showValidationMessage('Ingresa un monto válido'); return false; }
-                    return {
-                        monto: parseFloat(monto),
-                        categoria: document.getElementById('swalCat').value,
-                        descripcion: document.getElementById('swalDesc').value,
-                    }
+                    return { monto: parseFloat(monto), categoria: document.getElementById('swalCat').value, descripcion: document.getElementById('swalDesc').value }
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    data.transacciones.push({
-                        id: data.nextId++, tipo: swalTipo, monto: result.value.monto,
-                        categoria: result.value.categoria, descripcion: result.value.descripcion, fecha: hoy()
-                    });
+                    data.transacciones.push({ id: data.nextId++, tipo: swalTipo, monto: result.value.monto, categoria: result.value.categoria, descripcion: result.value.descripcion, fecha: hoy() });
                     saveData();
                     Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, icon: 'success', title: 'Guardado' });
                 }
@@ -444,10 +444,7 @@
         function abrirModalMeta() {
             Swal.fire({
                 title: 'Nueva Meta',
-                html: `
-                    <input id="swalNombre" class="swal2-input" placeholder="Ej: Viaje a la playa">
-                    <input id="swalObjetivo" type="number" class="swal2-input" placeholder="Monto objetivo $">
-                `,
+                html: `<input id="swalNombre" class="swal2-input" placeholder="Ej: Viaje"> <input id="swalObjetivo" type="number" class="swal2-input" placeholder="Monto objetivo $">`,
                 showCancelButton: true, confirmButtonText: 'Crear', confirmButtonColor: '#6366f1',
                 preConfirm: () => {
                     const n = document.getElementById('swalNombre').value;
@@ -456,20 +453,15 @@
                     return { nombre: n, objetivo: parseFloat(o) };
                 }
             }).then((res) => {
-                if (res.isConfirmed) {
-                    data.metas.push({ nombre: res.value.nombre, objetivo: res.value.objetivo, ahorrado: 0 });
-                    saveData();
-                }
+                if (res.isConfirmed) { data.metas.push({ nombre: res.value.nombre, objetivo: res.value.objetivo, ahorrado: 0 }); saveData(); }
             });
         }
 
         function abonarMeta(i) {
             const m = data.metas[i];
             Swal.fire({
-                title: `Abonar a "${m.nombre}"`,
-                text: `Faltan: ${formatMoney(m.objetivo - m.ahorrado)}`,
-                input: 'number',
-                inputAttributes: { min: 1 },
+                title: `Abonar a "${m.nombre}"`, text: `Faltan: ${formatMoney(m.objetivo - m.ahorrado)}`,
+                input: 'number', inputAttributes: { min: 1 },
                 showCancelButton: true, confirmButtonText: 'Abonar', confirmButtonColor: '#10b981',
                 preConfirm: (val) => { if(!val || val <= 0) { Swal.showValidationMessage('Monto inválido'); return false; } return val; }
             }).then(res => {
@@ -510,7 +502,7 @@
                         <option value="prestado">💚 Me deben (Yo presté)</option>
                         <option value="debo">❤️ Yo debo (Me prestaron)</option>
                     </select>
-                    <input id="swalPersona" class="swal2-input" placeholder="Nombre de la persona">
+                    <input id="swalPersona" class="swal2-input" placeholder="Nombre">
                     <input id="swalMontoP" type="number" class="swal2-input" placeholder="Monto $">
                 `,
                 showCancelButton: true, confirmButtonText: 'Guardar', confirmButtonColor: '#6366f1',
@@ -531,10 +523,8 @@
         function pagarPrestamo(id) {
             const p = data.prestamos.find(x => x.id === id);
             Swal.fire({
-                title: `Abono a ${p.persona}`,
-                text: `Pendiente: ${formatMoney(p.monto - p.pagado)}`,
-                input: 'number',
-                showCancelButton: true, confirmButtonText: 'Abonar', confirmButtonColor: '#6366f1',
+                title: `Abono a ${p.persona}`, text: `Pendiente: ${formatMoney(p.monto - p.pagado)}`,
+                input: 'number', showCancelButton: true, confirmButtonText: 'Abonar', confirmButtonColor: '#6366f1',
                 preConfirm: (val) => { if(!val || val <= 0) { Swal.showValidationMessage('Monto inválido'); return false; } return val; }
             }).then(res => {
                 if(res.isConfirmed) {
@@ -565,7 +555,6 @@
             }).join('');
         }
 
-        // --- AJUSTES Y DATOS ---
         function guardarAjustes() {
             data.ahorroPct = parseInt(document.getElementById('inputAhorroPct').value);
             saveData();
@@ -582,46 +571,25 @@
 
         function importarDatos() {
             Swal.fire({
-                title: 'Importar Backup',
-                text: 'Pega el contenido de tu archivo JSON aquí:',
-                input: 'textarea',
-                showCancelButton: true,
-                confirmButtonText: 'Importar',
+                title: 'Importar Backup', text: 'Pega el contenido de tu archivo JSON aquí:', input: 'textarea',
+                showCancelButton: true, confirmButtonText: 'Importar',
                 preConfirm: (jsonStr) => {
-                    try {
-                        const parsed = JSON.parse(jsonStr);
-                        if (!parsed.transacciones) throw new Error("Formato inválido");
-                        return parsed;
-                    } catch (e) {
-                        Swal.showValidationMessage('JSON inválido. Verifica el archivo.');
-                    }
+                    try { const parsed = JSON.parse(jsonStr); if (!parsed.transacciones) throw new Error("Formato inválido"); return parsed; } 
+                    catch (e) { Swal.showValidationMessage('JSON inválido. Verifica el archivo.'); }
                 }
             }).then(res => {
-                if(res.isConfirmed) {
-                    data = res.value;
-                    saveData();
-                    Swal.fire('Importado', 'Datos restaurados con éxito', 'success');
-                }
+                if(res.isConfirmed) { data = res.value; saveData(); Swal.fire('Importado', 'Datos restaurados', 'success'); }
             });
         }
 
         function borrarTodo() {
-            Swal.fire({
-                title: '¿Borrar todo?',
-                text: "Se perderán todas tus transacciones y metas permanentemente.",
-                icon: 'warning', showCancelButton: true,
-                confirmButtonColor: '#ef4444', confirmButtonText: 'Sí, borrar todo'
-            }).then(res => {
-                if(res.isConfirmed) {
-                    localStorage.removeItem('finzenDataPro');
-                    location.reload();
-                }
+            Swal.fire({ title: '¿Borrar todo?', text: "Se perderán todos tus datos permanentemente.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Sí, borrar' }).then(res => {
+                if(res.isConfirmed) { localStorage.removeItem('finzenDataPro'); location.reload(); }
             });
         }
 
-        // Iniciar
+        // Iniciar app
         renderApp();
-        setSwalTipo('gasto');
     </script>
 </body>
 </html>
