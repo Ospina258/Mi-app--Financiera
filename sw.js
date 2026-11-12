@@ -1,6 +1,6 @@
 /* Finzen · Service Worker */
 // 🚨 IMPORTANTE: Cada vez que actualices la app, cambia este número (ej: v2.2.0)
-const CACHE_NAME = 'finzen-v2.1.1'; 
+const CACHE_NAME = 'finzen-v1.1.0'; 
 
 const ASSETS = [
   './',
